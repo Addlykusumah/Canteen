@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ENUMS
+//
+enum StatusTransaksi {
+  belum_dikonfirm
+  dimasak
+  diantar
+  sampai
+}
+
+enum JenisMenu {
+  makanan
+  minuman
+}
+
+enum UserRole {
+  admin_stan
+  siswa
+}
+
+//
+// USERS
+//
+model users {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  role     UserRole
+
+  // Relation
+  stan  stan[]
+  siswa siswa[]
+}
+
+//
+// SISWA
+//
+model siswa {
+  id          Int      @id @default(autoincrement())
+  nama_siswa  String
+  alamat      String?
+  telp        String?
+  foto        String?
+  id_user     Int
+
+  // Relation
+  user        users    @relation(fields: [id_user], references: [id])
+  transaksi   transaksi[]
+}
+
+//
+// STAN
+//
+model stan {
+  id           Int     @id @default(autoincrement())
+  nama_stan    String
+  nama_pemilik String
+  telp         String?
+  id_user      Int
+
+  // Relation
+  user         users   @relation(fields: [id_user], references: [id])
+  menu         menu[]
+  transaksi    transaksi[]
+}       
+
+//
+// MENU
+//
+model menu {
+  id           Int        @id @default(autoincrement())
+  nama_makanan String
+  harga        Float
+  jenis        JenisMenu
+  foto         String?
+  deskripsi    String?
+  id_stan      Int
+
+  // Relation
+  stan             stan          @relation(fields: [id_stan], references: [id])
+  detail_transaksi detail_transaksi[]
+  menu_diskon      menu_diskon[]
+}
+
+//
+// DISKON
+//
+model diskon {
+  id               Int          @id @default(autoincrement())
+  nama_diskon      String
+  persentase_diskon Float
+  tanggal_awal     DateTime
+  tanggal_akhir    DateTime
+
+  menu_diskon      menu_diskon[]
+}
+
+//
+// MENU_DISKON (Pivot Table Many-to-Many)
+//
+model menu_diskon {
+  id       Int   @id @default(autoincrement())
+  id_menu  Int
+  id_diskon Int
+
+  menu   menu   @relation(fields: [id_menu], references: [id])
+  diskon diskon @relation(fields: [id_diskon], references: [id])
+}
+
+//
+// TRANSAKSI
+//
+model transaksi {
+  id         Int             @id @default(autoincrement())
+  tanggal    DateTime
+  id_stan    Int
+  id_siswa   Int
+  status     StatusTransaksi
+
+  // Relation
+  stan              stan              @relation(fields: [id_stan], references: [id])
+  siswa             siswa             @relation(fields: [id_siswa], references: [id])
+  detail_transaksi  detail_transaksi[]
+}
+
+//
+// DETAIL_TRANSAKSI
+//
+model detail_transaksi {
+  id            Int     @id @default(autoincrement())
+  id_transaksi  Int
+  id_menu       Int
+  qty           Int
+  harga_beli    Float
+
+  // Relations
+  transaksi transaksi @relation(fields: [id_transaksi], references: [id])
+  menu      menu      @relation(fields: [id_menu], references: [id])
+}
+
