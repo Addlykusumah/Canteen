@@ -1,10 +1,13 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
 import siswaRoutes from "./routers/siswaRoute";
 import siswaUpdateRoutes from "./routers/siswaUpdateRoute";
 import loginSiswaRoute from "./routers/authRoute";
 import siswaProfileRoute from "./routers/siswaprofileRoute";
+
 
 const app = express();
 
@@ -24,5 +27,6 @@ app.use("/api", loginSiswaRoute);
 
 //siswa profile
 app.use("/api", siswaProfileRoute);
+
 
 export default app;

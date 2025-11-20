@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
@@ -8,33 +9,32 @@ export const loginSiswa = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
 
-    // Validasi input
     if (!username || !password) {
       return res.status(400).json({ msg: "Username dan password diperlukan" });
     }
 
-    // Cek user berdasarkan username
     const user = await prisma.users.findUnique({
-      where: { username: username }
+      where: { username }
     });
 
-    if (!user) {
-      return res.status(400).json({ msg: "Username tidak ditemukan" });
-    }
+    if (!user) return res.status(400).json({ msg: "Username tidak ditemukan" });
 
-    // Bandingkan password
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      return res.status(400).json({ msg: "Password salah" });
-    }
+    if (!valid) return res.status(400).json({ msg: "Password salah" });
 
-    // Ambil data siswa
     const siswa = await prisma.siswa.findFirst({
       where: { id_user: user.id }
     });
 
-    return res.json({
+     const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET as string, // 🔥 pakai env
+      { expiresIn: "1d" }
+    );
+
+    res.json({
       msg: "Login berhasil",
+      token,
       user,
       siswa
     });
