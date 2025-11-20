@@ -8,17 +8,17 @@ export const registerSiswa = async (req: Request, res: Response): Promise<void> 
   try {
     const { nama_siswa, alamat, telp, username, password } = req.body;
 
-    // cek user exist
+    
     const exist = await prisma.users.findUnique({ where: { username } });
     if (exist) {
       res.status(400).json({ msg: "Username sudah digunakan" });
       return;
     }
 
-    // hash password
+
     const hashed = await bcrypt.hash(password, 10);
 
-    // create user
+ 
     const user = await prisma.users.create({
       data: {
         username,
@@ -27,10 +27,10 @@ export const registerSiswa = async (req: Request, res: Response): Promise<void> 
       }
     });
 
-    // foto dari multer
+    
     const foto = req.file?.filename || null;
 
-    // create siswa
+
     const siswa = await prisma.siswa.create({
       data: {
         nama_siswa,
