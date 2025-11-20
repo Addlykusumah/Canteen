@@ -1,92 +1,45 @@
-import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
-export const registerSiswa = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { username, password, nama_siswa } = req.body;
-
-    const hash = await bcrypt.hash(password, 10);
-
-    const user = await prisma.users.create({
-      data: {
-        username,
-        password: hash,
-        role: "siswa",
-      },
-    });
-
-    const siswa = await prisma.siswa.create({
-      data: {
-        nama_siswa,
-        id_user: user.id,
-      },
-    });
-
-    res.json({ message: "Register siswa berhasil", user, siswa });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const registerAdminStan = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { username, password, nama_stan, nama_pemilik } = req.body;
-
-    const hash = await bcrypt.hash(password, 10);
-
-    const user = await prisma.users.create({
-      data: {
-        username,
-        password: hash,
-        role: "admin_stan",
-      },
-    });
-
-    const stan = await prisma.stan.create({
-      data: {
-        nama_stan,
-        nama_pemilik,
-        id_user: user.id,
-      },
-    });
-
-    res.json({ message: "Register admin stan berhasil", user, stan });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const loginSiswa = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
 
+    // Validasi input
+    if (!username || !password) {
+      return res.status(400).json({ msg: "Username dan password diperlukan" });
+    }
+
+    // Cek user berdasarkan username
     const user = await prisma.users.findUnique({
-      where: { username },
+      where: { username: username }
     });
 
     if (!user) {
-      res.status(404).json({ error: "User tidak ditemukan" });
-      return;
+      return res.status(400).json({ msg: "Username tidak ditemukan" });
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      res.status(401).json({ error: "Password salah" });
-      return;
+    // Bandingkan password
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(400).json({ msg: "Password salah" });
     }
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1d" }
-    );
+    // Ambil data siswa
+    const siswa = await prisma.siswa.findFirst({
+      where: { id_user: user.id }
+    });
 
-    res.json({ message: "Login berhasil", token, role: user.role });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    return res.json({
+      msg: "Login berhasil",
+      user,
+      siswa
+    });
+
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 };
