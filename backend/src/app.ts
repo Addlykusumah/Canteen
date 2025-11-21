@@ -7,6 +7,8 @@ import siswaRoutes from "./routers/siswaRoute";
 import siswaUpdateRoutes from "./routers/siswaUpdateRoute";
 import loginSiswaRoute from "./routers/authRoute";
 import siswaProfileRoute from "./routers/siswaprofileRoute";
+import regristerStanRoute from "./routers/regristerstanRoute";
+import StanRoute from "./routers/authstan";
 
 
 const app = express();
@@ -27,6 +29,14 @@ app.use("/api", loginSiswaRoute);
 
 //siswa profile
 app.use("/api", siswaProfileRoute);
+
+//register stan
+app.use("/", regristerStanRoute);
+
+//login stan
+app.use("/", StanRoute);
+
+
 
 
 export default app;

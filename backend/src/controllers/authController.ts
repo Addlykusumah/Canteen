@@ -28,7 +28,7 @@ export const loginSiswa = async (req: Request, res: Response) => {
 
      const token = jwt.sign(
       { id: user.id, role: user.role },
-      process.env.JWT_SECRET as string, // 🔥 pakai env
+      process.env.JWT_SECRET as string, 
       { expiresIn: "1d" }
     );
 
@@ -43,3 +43,5 @@ export const loginSiswa = async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+
