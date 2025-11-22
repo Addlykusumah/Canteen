@@ -9,6 +9,7 @@ import loginSiswaRoute from "./routers/authRoute";
 import siswaProfileRoute from "./routers/siswaprofileRoute";
 import regristerStanRoute from "./routers/regristerstanRoute";
 import StanRoute from "./routers/authstan";
+import SiswaAdmin from "./routers/siswaadminRoute";
 
 
 const app = express();
@@ -35,6 +36,8 @@ app.use("/", regristerStanRoute);
 
 //login stan
 app.use("/", StanRoute);
+
+app.use("/api", SiswaAdmin);
 
 
 
