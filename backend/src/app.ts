@@ -18,7 +18,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
+app.use("/public", express.static("public"));
 
 // REGISTER dan LOGIN route
 app.use("/api", siswaRoutes);
