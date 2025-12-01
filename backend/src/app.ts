@@ -5,10 +5,9 @@ dotenv.config();
 
 import siswaRoutes from "./routers/siswaRoute";
 import siswaUpdateRoutes from "./routers/siswaUpdateRoute";
-import loginSiswaRoute from "./routers/authRoute";
+import login from "./routers/authRoute";
 import siswaProfileRoute from "./routers/siswaprofileRoute";
 import regristerStanRoute from "./routers/regristerstanRoute";
-import StanRoute from "./routers/authstan";
 import SiswaAdmin from "./routers/siswaadminRoute";
 import menuRoute from "./routers/menuRoute";
 
@@ -26,8 +25,6 @@ app.use("/api", siswaRoutes);
 // UPDATE route
 app.use("/api", siswaUpdateRoutes);
 
-//login Siswa 
-app.use("/api", loginSiswaRoute);
 
 //siswa profile
 app.use("/api", siswaProfileRoute);
@@ -35,8 +32,7 @@ app.use("/api", siswaProfileRoute);
 //register stan
 app.use("/", regristerStanRoute);
 
-//login stan
-app.use("/", StanRoute);
+app.use("/user", login);
 
 app.use("/api", SiswaAdmin);
 

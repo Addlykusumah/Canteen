@@ -1,10 +1,10 @@
-import express from "express";
-import { loginSiswa } from "../controllers/authController";
-import { upload } from "../middleware/upload";
+import { Router } from "express";
+import { login } from "../controllers/authController";
+import { verifyAuthentication } from "../middleware/userValidation";
 
-const router = express.Router();
+const router = Router();
 
 
-router.post("/login_siswa", upload.none(), loginSiswa);
+router.post("/login", verifyAuthentication, login);
 
 export default router;

@@ -6,109 +6,67 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "SECRET_KEY";
 
-export const loginSiswa = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ msg: "Username dan password diperlukan" });
-    }
-
-    const user = await prisma.users.findUnique({
-      where: { username }
-    });
-
-    if (!user) return res.status(400).json({ msg: "Username tidak ditemukan" });
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(400).json({ msg: "Password salah" });
-
-    const siswa = await prisma.siswa.findFirst({
-      where: { id_user: user.id }
-    });
-
-     const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET as string, 
-      { expiresIn: "1d" }
-    );
-
-    res.json({
-      msg: "Login berhasil",
-      token,
-      user,
-      siswa
-    });
-
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-
-export const loginStan = async (req: Request, res: Response) => {
-  try {
     const makerId = req.headers["makerid"] || req.headers["maker-id"] || null;
-    const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
-        error: "username dan password wajib diisi"
-      });
+      return res.status(400).json({ error: "Username dan password wajib diisi" });
     }
 
-    // Ambil user berdasar username
     const user = await prisma.users.findUnique({
       where: { username },
-      include: { stan: true }
+      include: { stan: true, siswa: true }
     });
 
-    if (!user) {
-      return res.status(401).json({ error: "Username atau password salah" });
-    }
+    if (!user) return res.status(401).json({ error: "Username atau password salah" });
 
-    // ❌ Jika role BUKAN admin_stan → TOLAK
-    if (user.role !== "admin_stan") {
-      return res.status(403).json({
-        error: "Hanya stan yang boleh login di endpoint ini"
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ error: "Username atau password salah" });
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: user.role === "siswa" ? "1d" : "7d" }
+    );
+
+    // Response berbeda berdasarkan role
+    if (user.role === "siswa") {
+      const siswa = await prisma.siswa.findFirst({ where: { id_user: user.id } });
+      return res.status(200).json({
+        msg: "Login siswa berhasil",
+        token,
+        user: {
+      id: user.id,
+      username: user.username,
+      role: user.role
+    },
+    siswa
+      });
+    } else if (user.role === "admin_stan") {
+      return res.status(200).json({
+        msg: "Login stan berhasil",
+        token: `Bearer ${token}`,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role
+        },
+        stan: user.stan?.map(s => ({
+          id: s.id,
+          nama_stan: s.nama_stan,
+          nama_pemilik: s.nama_pemilik,
+          telp: s.telp
+        })) || []
       });
     }
 
-    // Cek password
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ error: "Username atau password salah" });
-    }
-
-    // Payload token
-    const payload = {
-      sub: user.id,
-      username: user.username,
-      role: user.role
-    };
-
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
-
-    return res.status(200).json({
-      message: "Login berhasil",
-      maker_id: makerId,
-      token: `Bearer ${token}`,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role
-      },
-      stan: user.stan?.map(s => ({
-        id: s.id,
-        nama_stan: s.nama_stan,
-        nama_pemilik: s.nama_pemilik,
-        telp: s.telp
-      })) || []
-    });
+    
+    return res.status(400).json({ error: "Role user tidak dikenali" });
 
   } catch (err: any) {
     console.error(err);
     return res.status(500).json({ error: err.message || "Server error" });
   }
 };
-
