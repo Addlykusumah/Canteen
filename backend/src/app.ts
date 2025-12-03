@@ -10,7 +10,7 @@ import siswaProfileRoute from "./routers/siswaprofileRoute";
 import regristerStanRoute from "./routers/regristerstanRoute";
 import SiswaAdmin from "./routers/siswaadminRoute";
 import menuRoute from "./routers/menuRoute";
-
+import diskonRoute from "./routers/diskonRoute";
 
 const app = express();
 
@@ -19,26 +19,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static("public"));
 
-// REGISTER dan LOGIN route
 app.use("/api", siswaRoutes);
 
-// UPDATE route
 app.use("/api", siswaUpdateRoutes);
 
-
-//siswa profile
 app.use("/api", siswaProfileRoute);
 
-//register stan
 app.use("/", regristerStanRoute);
 
 app.use("/user", login);
 
 app.use("/api", SiswaAdmin);
 
-app.use("/api/admin", menuRoute);
+app.use("/admin", menuRoute);
 
-
-
+app.use("/admin", diskonRoute);
 
 export default app;

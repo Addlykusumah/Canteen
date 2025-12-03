@@ -12,18 +12,22 @@ export const login = async (req: Request, res: Response) => {
     const makerId = req.headers["makerid"] || req.headers["maker-id"] || null;
 
     if (!username || !password) {
-      return res.status(400).json({ error: "Username dan password wajib diisi" });
+      return res
+        .status(400)
+        .json({ error: "Username dan password wajib diisi" });
     }
 
     const user = await prisma.users.findUnique({
       where: { username },
-      include: { stan: true, siswa: true }
+      include: { stan: true, siswa: true },
     });
 
-    if (!user) return res.status(401).json({ error: "Username atau password salah" });
+    if (!user)
+      return res.status(401).json({ error: "Username atau password salah" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ error: "Username atau password salah" });
+    if (!match)
+      return res.status(401).json({ error: "Username atau password salah" });
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
@@ -33,16 +37,18 @@ export const login = async (req: Request, res: Response) => {
 
     // Response berbeda berdasarkan role
     if (user.role === "siswa") {
-      const siswa = await prisma.siswa.findFirst({ where: { id_user: user.id } });
+      const siswa = await prisma.siswa.findFirst({
+        where: { id_user: user.id },
+      });
       return res.status(200).json({
         msg: "Login siswa berhasil",
         token,
         user: {
-      id: user.id,
-      username: user.username,
-      role: user.role
-    },
-    siswa
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        },
+        siswa,
       });
     } else if (user.role === "admin_stan") {
       return res.status(200).json({
@@ -51,20 +57,19 @@ export const login = async (req: Request, res: Response) => {
         user: {
           id: user.id,
           username: user.username,
-          role: user.role
+          role: user.role,
         },
-        stan: user.stan?.map(s => ({
-          id: s.id,
-          nama_stan: s.nama_stan,
-          nama_pemilik: s.nama_pemilik,
-          telp: s.telp
-        })) || []
+        stan:
+          user.stan?.map((s) => ({
+            id: s.id,
+            nama_stan: s.nama_stan,
+            nama_pemilik: s.nama_pemilik,
+            telp: s.telp,
+          })) || [],
       });
     }
 
-    
     return res.status(400).json({ error: "Role user tidak dikenali" });
-
   } catch (err: any) {
     console.error(err);
     return res.status(500).json({ error: err.message || "Server error" });
