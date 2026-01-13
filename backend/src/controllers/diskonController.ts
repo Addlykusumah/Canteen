@@ -521,7 +521,7 @@ export const updateMenuDiskon = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Diskon baru tidak ditemukan" });
     }
 
-    // pastikan menu baru milik stan ini
+    // pastikan menu baru milik stan ini;c
     const menuBaru = await prisma.menu.findFirst({
       where: {
         id: newMenuId,
@@ -535,7 +535,7 @@ export const updateMenuDiskon = async (req: Request, res: Response) => {
       });
     }
 
-    // cek apakah kombinasi (id_menu, id_diskon) sudah ada di baris lain
+    // cek apakah kombinasi (id_menu, id_diskon) 
     const duplicate = await prisma.menu_diskon.findFirst({
       where: {
         id_menu: newMenuId,

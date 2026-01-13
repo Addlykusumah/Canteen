@@ -11,6 +11,8 @@ import regristerStanRoute from "./routers/regristerstanRoute";
 import SiswaAdmin from "./routers/siswaadminRoute";
 import menuRoute from "./routers/menuRoute";
 import diskonRoute from "./routers/diskonRoute";
+import transaksiRoute from "./routers/transaksiRoute";
+import detailtransaksiRoute from "./routers/detailtransaksiRoute";
 
 const app = express();
 
@@ -34,5 +36,9 @@ app.use("/api", SiswaAdmin);
 app.use("/admin", menuRoute);
 
 app.use("/admin", diskonRoute);
+
+app.use("/siswa", transaksiRoute);
+
+app.use ("/", detailtransaksiRoute)
 
 export default app;

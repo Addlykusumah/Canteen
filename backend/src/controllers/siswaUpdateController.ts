@@ -19,8 +19,8 @@ export const updateSiswa = async (req: Request, res: Response) => {
     await prisma.users.update({
       where: { id: siswa.id_user },
       data: {
-        username: username || undefined
-      }
+        username: username || undefined,
+      },
     });
 
     // update siswa
@@ -30,15 +30,14 @@ export const updateSiswa = async (req: Request, res: Response) => {
         nama_siswa,
         alamat,
         telp,
-        foto
-      }
+        foto,
+      },
     });
 
     res.json({
       msg: "Update siswa berhasil",
-      siswa: updated
+      siswa: updated,
     });
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

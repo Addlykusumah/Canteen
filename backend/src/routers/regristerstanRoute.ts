@@ -1,11 +1,9 @@
 import { Router } from "express";
 import { upload } from "../middleware/upload";
-import { registerStan } from "../controllers/RegristerController";
+import { registerStan } from "../controllers/regristerController";
 import { verifyRegisterStan } from "../middleware/userValidation";
 
-
 const router = Router();
-
 
 router.post("/register_stan", upload.none(), registerStan, verifyRegisterStan);
 

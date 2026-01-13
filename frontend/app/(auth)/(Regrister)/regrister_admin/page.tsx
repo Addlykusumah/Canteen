@@ -24,9 +24,9 @@ const RegisterStanPage = () => {
     try {
       setLoading(true);
 
-      const url = `${BASE_API_URL}/register_stan`; // ganti kalau route backend beda
+      const url = `${BASE_API_URL}/register_stan`; 
 
-      // Karena backend pakai multer.none(), kirim sebagai multipart/form-data
+      
       const formData = new FormData();
       formData.append("nama_stan", namaStan);
       formData.append("nama_pemilik", namaPemilik);
@@ -98,7 +98,7 @@ const RegisterStanPage = () => {
               />
             </div>
 
-            {/* Nama Pemilik */}
+           
             <div>
               <label className="block text-sm mb-1">Nama Pemilik</label>
               <input
@@ -136,7 +136,7 @@ const RegisterStanPage = () => {
               />
             </div>
 
-            {/* Password */}
+            
             <div>
               <label className="block text-sm mb-1">Password</label>
               <input

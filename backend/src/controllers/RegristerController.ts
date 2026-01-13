@@ -8,7 +8,10 @@ const prisma = new PrismaClient();
  * REGISTER SISWA
  * Endpoint contoh: POST /auth/register/siswa
  */
-export const registerSiswa = async (req: Request, res: Response): Promise<void> => {
+export const registerSiswa = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { nama_siswa, alamat, telp, username, password } = req.body;
 
@@ -72,7 +75,10 @@ export const registerSiswa = async (req: Request, res: Response): Promise<void> 
  * REGISTER ADMIN STAN
  * Endpoint contoh: POST /auth/register/stan
  */
-export const registerStan = async (req: Request, res: Response): Promise<void> => {
+export const registerStan = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     // makerId dikirim di header (opsional, buat tracking)
     const makerId = (req.headers["makerid"] ||

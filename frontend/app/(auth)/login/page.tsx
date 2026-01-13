@@ -1,139 +1,185 @@
-"use client"
+"use client";
 
+import Image from "next/image";
 import { BASE_API_URL } from "../../../global";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { storeCookie } from "@/lib/client-cookies";
-import { FormEvent, useState } from "react"
-import { ToastContainer, toast } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
+import { FormEvent, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const LoginPage = () => {
-    const [username, setUsername] = useState<string>("")
-    const [password, setPassword] = useState<string>("")
-    const [showPassword, setShowPassword] = useState<boolean>(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-    const router = useRouter()
-
-    const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-        const url = `${BASE_API_URL}/user/login`;
-        const payload = { username, password };
+      const url = `${BASE_API_URL}/user/login`;
+      const payload = { username, password };
 
-        const { data } = await axios.post(url, payload, {
-            headers: { "Content-Type": "application/json" }
+      const { data } = await axios.post(url, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const { msg, token, user, siswa } = data;
+
+      if (user) {
+        toast(msg, {
+          hideProgressBar: true,
+          containerId: `toastLogin`,
+          type: "success",
+          autoClose: 2000,
         });
 
-        console.log("Response:", data);
+        storeCookie("token", token);
+        storeCookie("id", user.id.toString());
+        storeCookie(
+          "name",
+          user.role === "siswa" && siswa ? siswa.nama_siswa : user.username
+        );
+        storeCookie("role", user.role);
 
-        const { msg, token, user, siswa } = data;
-
-        if (user) {
-            
-            toast(msg, { hideProgressBar: true, containerId: `toastLogin`, type: "success", autoClose: 2000 });
-
-            storeCookie("token", token);
-            storeCookie("id", user.id.toString());
-            storeCookie("name", user.role === "siswa" && siswa ? siswa.nama_siswa : user.username);
-            storeCookie("role", user.role);
-
-            if (user.role === "siswa") router.replace("/dashboard");
-            else if (user.role === "admin_stan") router.replace("/cashier/dashboard");
-
-        } else {
-            
-            toast(msg || "Username atau password salah", {
-                hideProgressBar: true,
-                containerId: `toastLogin`,
-                type: "warning",
-                autoClose: 2000
-            });
-        }
-
+        if (user.role === "siswa") router.replace("/dashboard");
+        else if (user.role === "admin_stan")
+          router.replace("/cashier/dashboard");
+      } else {
+        toast(msg || "Username atau password salah", {
+          hideProgressBar: true,
+          containerId: `toastLogin`,
+          type: "warning",
+          autoClose: 2000,
+        });
+      }
     } catch (error: any) {
-    console.error(error);
+      const message =
+        error.response?.data?.msg ||
+        error.response?.data?.error ||
+        "Something went wrong";
 
-    const message =
-        error.response?.data?.msg ||   
-        error.response?.data?.error || 
-        "Something went wrong";      
-
-    toast(message, {
+      toast(message, {
         hideProgressBar: true,
         containerId: `toastLogin`,
         type: "error",
-        autoClose: 2000
-    });
-}
+        autoClose: 2000,
+      });
+    }
+  };
 
+  return (
+    <main className="min-h-screen bg-white">
+      <ToastContainer containerId="toastLogin" />
+
+      <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
+        {/* LEFT SIDE */}
+        <section className="flex items-center justify-center px-8 py-12 lg:px-20">
+          <div className="w-full max-w-xl">
+            
+            <h1 className="text-5xl font-extrabold leading-tight text-slate-900 lg:text-6xl">
+              Halo, <br /> Selamat Datang
+            </h1>
+
+            <p className="mt-4 text-base text-slate-500 lg:text-lg">
+              Welcome back! Please login to continue.
+            </p>
+
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="mt-12 space-y-5">
+              {/* Username */}
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+              />
+
+              {/* Password */}
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-slate-800 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+              />
+
+              <div className="flex items-center justify-between pt-2">
+                <label className="flex items-center gap-3 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                    defaultChecked
+                  />
+                  Remember me
+                </label>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                className="mt-3 w-44 rounded-xl bg-violet-600 px-6 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-200"
+              >
+                Sign In
+              </button>
+            </form>
+          </div>
+        </section>
+
+        {/* RIGHT SIDE */}
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        {/* <section className="relative hidden lg:block h-screen w-full"> */}
+          {/* <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-violet-500 to-indigo-500"> */}
+            {/* Cloud Effects */}
+            {/* <div className="absolute -left-20 top-10 h-28 w-72 rounded-full bg-white/30 blur-sm" />
+            <div className="absolute -right-24 top-16 h-32 w-80 rounded-full bg-white/30 blur-sm" />
+            <div className="absolute left-10 bottom-14 h-28 w-72 rounded-full bg-white/25 blur-sm" />
+            <div className="absolute right-10 bottom-8 h-24 w-60 rounded-full bg-white/20 blur-sm" /> */}
+
+            {/* <div className="absolute inset-0 flex items-center justify-center px-10">
+              <div
+                style={{ width: "1500px", height: "900px" }}
+                className="relative"
+              >
+                <Image
+                  src="/image/3dKantin.png"
+                  alt="Illustration"
+                  fill
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </section> */}
+      </div>
+    </main>
+  );
 };
 
-
-    return (
-        <div className="w-screen h-screen bg-login">
-            <ToastContainer containerId={`toastLogin`} />
-            <div className="w-full h-full bg-backdrop-login flex justify-center items-center p-5">
-                <div className="w-32 md:w-6/12 lg:w-4/12 min-h-[400px] border rounded-xl bg-white p-5 flex flex-col items-center relative">
-                    <div className="absolute bottom-0 left-0 w-full py-2 text-center">
-                        <small className="text-slate-600">Copyright @2025</small>
-                    </div>
-
-                    <h4 className="text-2xl uppercase font-semibold text-primary mb-4">CraveIt</h4>
-                    <span className="text-sm text-slate-500 font-medium text-center">
-                        Welcome To My Food Store
-                    </span>
-
-                    <form onSubmit={handleSubmit} className="w-full my-10">
-                        {/* Username */}
-                        <div className="flex w-full my-4">
-                            <div className="bg-primary rounded-l-md p-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                </svg>
-                            </div>
-                            <input
-                                type="text"
-                                className="border p-2 grow rounded-r-md focus:outline-none focus:ring-primary focus:border-primary"
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
-                                placeholder="Username"
-                            />
-                        </div>
-
-                        {/* Password */}
-                        <div className="flex w-full my-4">
-                            <div className="bg-primary rounded-l-md p-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                </svg>
-                            </div>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                className="border p-2 grow focus:outline-none focus:ring-primary focus:border-primary"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="Password"
-                            />
-                            <div className="cursor-pointer bg-primary rounded-r-md p-3" onClick={() => setShowPassword(!showPassword)}>
-                                {showPassword ? (
-                                    <span>Hide</span>
-                                ) : (
-                                    <span>Show</span>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="my-10">
-                            <button type="submit" className="bg-primary hover:bg-primary uppercase w-full p-2 rounded-md text-white">
-                                Login
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-export default LoginPage
+export default LoginPage;

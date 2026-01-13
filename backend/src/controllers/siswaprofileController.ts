@@ -13,7 +13,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     // cari user berdasarkan makerID (id_user)
     const user = await prisma.users.findUnique({
-      where: { id: makerID }
+      where: { id: makerID },
     });
 
     if (!user) {
@@ -22,7 +22,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     // cari siswa berdasarkan id_user
     const siswa = await prisma.siswa.findFirst({
-      where: { id_user: makerID }
+      where: { id_user: makerID },
     });
 
     if (!siswa) {
@@ -32,9 +32,8 @@ export const getProfile = async (req: Request, res: Response) => {
     return res.json({
       msg: "Berhasil mengambil profile",
       user,
-      siswa
+      siswa,
     });
-
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }

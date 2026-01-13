@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 export const getAllSiswaAdmin = async (req: Request, res: Response) => {
   try {
     const siswa = await prisma.siswa.findMany({
-      include: { user: true }
+      include: { user: true },
     });
     res.json(siswa);
   } catch (err: any) {
@@ -16,12 +16,13 @@ export const getAllSiswaAdmin = async (req: Request, res: Response) => {
   }
 };
 
-
 export const createSiswaAdmin = async (req: Request, res: Response) => {
   try {
     const { nama_siswa, alamat, telp, username, password } = req.body;
     if (!username || !password || !nama_siswa) {
-      return res.status(400).json({ msg: "username, password, nama_siswa diperlukan" });
+      return res
+        .status(400)
+        .json({ msg: "username, password, nama_siswa diperlukan" });
     }
 
     // cek username
@@ -30,7 +31,7 @@ export const createSiswaAdmin = async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.users.create({
-      data: { username, password: hashed, role: "siswa" }
+      data: { username, password: hashed, role: "siswa" },
     });
 
     const foto = (req as any).file?.filename ?? null;
@@ -41,8 +42,8 @@ export const createSiswaAdmin = async (req: Request, res: Response) => {
         alamat,
         telp,
         foto,
-        id_user: user.id
-      }
+        id_user: user.id,
+      },
     });
 
     res.status(201).json({ msg: "Siswa dibuat", siswa, user });
@@ -68,7 +69,7 @@ export const updateSiswaAdmin = async (req: Request, res: Response) => {
 
       await prisma.users.update({
         where: { id: siswa.id_user },
-        data: dataUser
+        data: dataUser,
       });
     }
 
@@ -80,8 +81,8 @@ export const updateSiswaAdmin = async (req: Request, res: Response) => {
         nama_siswa: nama_siswa ?? undefined,
         alamat: alamat ?? undefined,
         telp: telp ?? undefined,
-        foto
-      }
+        foto,
+      },
     });
 
     res.json({ msg: "Siswa diupdate", siswa: updated });
