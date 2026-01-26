@@ -55,3 +55,17 @@ export const onlyAdminStan = (
 
   next();
 };
+
+export const onlySiswa = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+
+  if (!user) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+
+  if (user.role !== "siswa") {
+    return res.status(403).json({ msg: "Akses ditolak, hanya siswa" });
+  }
+
+  next();
+};

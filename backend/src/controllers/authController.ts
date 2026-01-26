@@ -53,7 +53,7 @@ export const login = async (req: Request, res: Response) => {
     } else if (user.role === "admin_stan") {
       return res.status(200).json({
         msg: "Login stan berhasil",
-        token: `Bearer ${token}`,
+        token: `${token}`,
         user: {
           id: user.id,
           username: user.username,

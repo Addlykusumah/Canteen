@@ -3,53 +3,44 @@ import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
 
-/**
- * POST /siswa/transaksi
- * Body JSON:
- * {
- *   "items": [
- *     { "id_menu": 1, "qty": 2 },
- *     { "id_menu": 5, "qty": 1 }
- *   ]
- * }
- */
 export const createTransaksiSiswa = async (req: Request, res: Response) => {
   try {
-    const id_user = (req as any).user?.id; // dari JWT middleware
+    const id_user = (req as any).user?.id;
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
 
-    if (!id_user) {
-      return res.status(401).json({ msg: "Unauthorized" });
-    }
-
-    // cari siswa berdasarkan user
-    const siswa = await prisma.siswa.findFirst({
-      where: { id_user },
-    });
-
-    if (!siswa) {
+    const siswa = await prisma.siswa.findFirst({ where: { id_user } });
+    if (!siswa)
       return res.status(403).json({ msg: "Data siswa tidak ditemukan" });
-    }
 
-    const { items } = req.body as {
-      items: { id_menu: number; qty: number }[];
+    const body = req.body as {
+      items?: Array<{ id_menu: number; qty: number }>;
     };
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
       return res.status(400).json({ msg: "Items transaksi wajib diisi" });
     }
 
-    const menuIds = items.map((it) => Number(it.id_menu));
+    // merge item duplikat + validasi
+    const merged = new Map<number, number>();
+    for (const it of body.items) {
+      const id_menu = Number(it.id_menu);
+      const qty = Number(it.qty);
 
-    // ambil semua menu yang dipesan beserta relasi diskonnya
+      if (!Number.isInteger(id_menu) || id_menu <= 0) {
+        return res.status(400).json({ msg: "id_menu harus integer > 0" });
+      }
+      if (!Number.isInteger(qty) || qty <= 0) {
+        return res.status(400).json({ msg: "qty harus integer > 0" });
+      }
+
+      merged.set(id_menu, (merged.get(id_menu) ?? 0) + qty);
+    }
+
+    const menuIds = [...merged.keys()];
+
     const menus = await prisma.menu.findMany({
       where: { id: { in: menuIds } },
       include: {
-        stan: true,
-        menu_diskon: {
-          include: {
-            diskon: true,
-          },
-        },
+        menu_diskon: { include: { diskon: true } },
       },
     });
 
@@ -57,11 +48,8 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
       return res.status(400).json({ msg: "Ada menu yang tidak ditemukan" });
     }
 
-    // pastikan semua menu dari stan yang sama
     const firstStanId = menus[0].id_stan;
-    const bedaStan = menus.some((m) => m.id_stan !== firstStanId);
-
-    if (bedaStan) {
+    if (menus.some((m) => m.id_stan !== firstStanId)) {
       return res.status(400).json({
         msg: "Semua menu dalam satu transaksi harus berasal dari stan yang sama",
       });
@@ -70,22 +58,22 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
     const now = new Date();
     let grandTotal = 0;
 
-    // siapkan detail_transaksi dengan harga setelah diskon
-    const detailData = items.map((item) => {
-      const menu = menus.find((m) => m.id === item.id_menu)!;
+    const menuMap = new Map(menus.map((m) => [m.id, m]));
 
-      // cari diskon aktif pada menu ini
+    const detailData = menuIds.map((id_menu) => {
+      const menu = menuMap.get(id_menu)!;
+      const qty = merged.get(id_menu)!;
+
       const diskonAktif = menu.menu_diskon
-        .filter((md) => {
-          const d = md.diskon;
-          return now >= d.tanggal_awal && now <= d.tanggal_akhir;
-        })
+        .filter(
+          (md) =>
+            now >= md.diskon.tanggal_awal && now <= md.diskon.tanggal_akhir,
+        )
         .sort(
-          (a, b) => b.diskon.persentase_diskon - a.diskon.persentase_diskon
-        ); // kalau ada beberapa diskon, ambil yang persentase paling besar
+          (a, b) => b.diskon.persentase_diskon - a.diskon.persentase_diskon,
+        );
 
-      const persenDiskon =
-        diskonAktif.length > 0 ? diskonAktif[0].diskon.persentase_diskon : 0;
+      const persenDiskon = diskonAktif[0]?.diskon.persentase_diskon ?? 0;
 
       const hargaAsli = menu.harga;
       const hargaSetelahDiskon =
@@ -93,19 +81,17 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
           ? hargaAsli - hargaAsli * (persenDiskon / 100)
           : hargaAsli;
 
-      const subtotal = hargaSetelahDiskon * item.qty;
-      grandTotal += subtotal;
+      grandTotal += hargaSetelahDiskon * qty;
 
       return {
         id_menu: menu.id,
-        qty: item.qty,
-        harga_beli: hargaSetelahDiskon, // per satuan
+        qty,
+        harga_beli: hargaSetelahDiskon, // Float sesuai schema
       };
     });
 
-    // Simpan transaksi + detail dalam satu transaksi database
-    const result = await prisma.$transaction(async (tx) => {
-      const transaksi = await tx.transaksi.create({
+    const transaksi = await prisma.$transaction(async (tx) => {
+      const header = await tx.transaksi.create({
         data: {
           tanggal: new Date(),
           id_stan: firstStanId,
@@ -115,20 +101,249 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
       });
 
       await tx.detail_transaksi.createMany({
-        data: detailData.map((d) => ({
-          ...d,
-          id_transaksi: transaksi.id,
-        })),
+        data: detailData.map((d) => ({ ...d, id_transaksi: header.id })),
       });
 
-      return transaksi;
+      return header;
     });
 
     return res.status(201).json({
       msg: "Transaksi berhasil dibuat",
-      transaksi: result,
+      transaksi,
       total: grandTotal,
       detail: detailData,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const HistoriPesananBulananSiswa = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const id_user = (req as any).user?.id;
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+
+    const siswa = await prisma.siswa.findFirst({ where: { id_user } });
+    if (!siswa)
+      return res.status(403).json({ msg: "Data siswa tidak ditemukan" });
+
+    const month = Number(req.query.month);
+    const year = Number(req.query.year);
+
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      return res.status(400).json({ msg: "Query month wajib 1-12" });
+    }
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      return res
+        .status(400)
+        .json({ msg: "Query year wajib format 4 digit (mis. 2026)" });
+    }
+
+    // Range tanggal: awal bulan -> awal bulan berikutnya
+    const start = new Date(year, month - 1, 1, 0, 0, 0);
+    const end = new Date(year, month, 1, 0, 0, 0);
+
+    const transaksiList = await prisma.transaksi.findMany({
+      where: {
+        id_siswa: siswa.id,
+        tanggal: { gte: start, lt: end },
+      },
+      orderBy: { tanggal: "desc" },
+      include: {
+        stan: { select: { id: true, nama_stan: true } },
+        detail_transaksi: {
+          include: {
+            menu: {
+              select: {
+                id: true,
+                nama_makanan: true,
+                jenis: true,
+                foto: true,
+                deskripsi: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Hitung total per transaksi dan total sebulan
+    const data = transaksiList.map((t) => {
+      const total = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty * d.harga_beli,
+        0,
+      );
+      return { ...t, total };
+    });
+
+    const totalBulanIni = data.reduce((sum, t) => sum + t.total, 0);
+
+    return res.json({
+      month,
+      year,
+      count: data.length,
+      totalBulanIni,
+      transaksi: data,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const PemasukanAdmin = async (req: Request, res: Response) => {
+  try {
+    const id_user = (req as any).user?.id;
+    const role = (req as any).user?.role;
+
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+    if (role !== "admin_stan") {
+      return res.status(403).json({ msg: "Akses ditolak, hanya admin stan" });
+    }
+
+    // Cari stan milik admin
+    const stan = await prisma.stan.findFirst({ where: { id_user } });
+    if (!stan) return res.status(404).json({ msg: "Stan tidak ditemukan" });
+
+    const month = Number(req.query.month);
+    const year = Number(req.query.year);
+
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      return res.status(400).json({ msg: "Query month wajib 1-12" });
+    }
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({ msg: "Query year wajib format 4 digit" });
+    }
+
+    // optional filter status
+    const statusQ = req.query.status as string | undefined;
+    const statusFilter = statusQ ? (statusQ as StatusTransaksi) : undefined;
+
+    const start = new Date(year, month - 1, 1, 0, 0, 0);
+    const end = new Date(year, month, 1, 0, 0, 0);
+
+    const transaksiList = await prisma.transaksi.findMany({
+      where: {
+        id_stan: stan.id,
+        tanggal: { gte: start, lt: end },
+        ...(statusFilter ? { status: statusFilter } : {}),
+      },
+      orderBy: { tanggal: "desc" },
+      include: {
+        siswa: { select: { id: true, nama_siswa: true } },
+        detail_transaksi: {
+          include: {
+            menu: { select: { id: true, nama_makanan: true } },
+          },
+        },
+      },
+    });
+
+    const transaksiDenganTotal = transaksiList.map((t) => {
+      const total = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty * d.harga_beli,
+        0,
+      );
+      return { ...t, total };
+    });
+
+    const pemasukanBulanIni = transaksiDenganTotal.reduce(
+      (sum, t) => sum + t.total,
+      0,
+    );
+
+    return res.json({
+      stan: { id: stan.id, nama_stan: stan.nama_stan },
+      month,
+      year,
+      filter: { status: statusFilter ?? "all" },
+      jumlahTransaksi: transaksiDenganTotal.length,
+      pemasukanBulanIni,
+      transaksi: transaksiDenganTotal,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const HistoriAdmin = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const id_user = (req as any).user?.id;
+    const role = (req as any).user?.role;
+
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+    if (role !== "admin_stan") {
+      return res.status(403).json({ msg: "Akses ditolak, hanya admin stan" });
+    }
+
+    // ambil stan milik admin
+    const stan = await prisma.stan.findFirst({ where: { id_user } });
+    if (!stan) return res.status(404).json({ msg: "Stan tidak ditemukan" });
+
+    const month = Number(req.query.month);
+    const year = Number(req.query.year);
+
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      return res.status(400).json({ msg: "Query month wajib 1-12" });
+    }
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({ msg: "Query year wajib format 4 digit" });
+    }
+
+    // optional filter status
+    const statusQ = req.query.status as string | undefined;
+    const statusFilter = statusQ ? (statusQ as StatusTransaksi) : undefined;
+
+    const start = new Date(year, month - 1, 1, 0, 0, 0);
+    const end = new Date(year, month, 1, 0, 0, 0);
+
+    const transaksiList = await prisma.transaksi.findMany({
+      where: {
+        id_stan: stan.id,
+        tanggal: { gte: start, lt: end },
+        ...(statusFilter ? { status: statusFilter } : {}),
+      },
+      orderBy: { tanggal: "desc" },
+      include: {
+        siswa: { select: { id: true, nama_siswa: true, telp: true } },
+        detail_transaksi: {
+          include: {
+            menu: {
+              select: { id: true, nama_makanan: true, jenis: true, foto: true },
+            },
+          },
+        },
+      },
+    });
+
+    // hitung total per transaksi + total bulan ini
+    const data = transaksiList.map((t) => {
+      const total = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty * d.harga_beli,
+        0,
+      );
+      const itemsCount = t.detail_transaksi.reduce((sum, d) => sum + d.qty, 0);
+      return { ...t, total, itemsCount };
+    });
+
+    const totalBulanIni = data.reduce((sum, t) => sum + t.total, 0);
+
+    return res.json({
+      stan: { id: stan.id, nama_stan: stan.nama_stan },
+      month,
+      year,
+      filter: { status: statusFilter ?? "all" },
+      jumlahTransaksi: data.length,
+      totalBulanIni,
+      transaksi: data,
     });
   } catch (err: any) {
     console.error(err);

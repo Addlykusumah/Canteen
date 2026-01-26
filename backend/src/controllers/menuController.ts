@@ -15,7 +15,7 @@ export const getAllMenu = async (req: Request, res: Response) => {
     });
 
     res.json(menu);
-
+    
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

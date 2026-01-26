@@ -1,18 +1,22 @@
 import express from "express";
-import { registerSiswa } from "../controllers/regristerController";
+import { authMiddleware, onlySiswa } from "../middleware/auth";
 import { upload } from "../middleware/upload";
-import { verifyRegisterSiswa } from "../middleware/userValidation";
-import { authMiddleware, onlyAdminStan } from "../middleware/auth";
+import { verifyEditUser } from "../middleware/userValidation";
+import { getProfileSiswa, updateProfileSiswa } from "../controllers/siswaController";
 
 const router = express.Router();
 
-router.post(
-  "/register_siswa",
-  authMiddleware,          
-  onlyAdminStan,          
-  upload.single("foto"),  
-  verifyRegisterSiswa,   
-  registerSiswa           
+
+router.get("/profile", authMiddleware, onlySiswa, getProfileSiswa);
+
+
+router.put(
+  "/profile/edit",
+  authMiddleware,
+  onlySiswa,
+  upload.single("foto"),
+  verifyEditUser, 
+  updateProfileSiswa
 );
 
 export default router;
