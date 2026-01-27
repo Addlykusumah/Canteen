@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+
     
    
 }
@@ -72,13 +73,15 @@ model stan {
   nama_stan    String
   nama_pemilik String
   telp         String?
+  foto         String?      
   id_user      Int
 
   // Relation
   user         users   @relation(fields: [id_user], references: [id])
   menu         menu[]
   transaksi    transaksi[]
-}       
+}
+   
 
 //
 // MENU

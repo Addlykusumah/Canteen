@@ -6,24 +6,25 @@ const prisma = new PrismaClient();
 
 /**
  * REGISTER SISWA
- * Endpoint contoh: POST /auth/register/siswa
+ * POST /auth/register/siswa
+ * multipart/form-data (kalau upload foto) atau JSON (kalau tanpa foto)
  */
-export const registerSiswa = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const registerSiswa = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { nama_siswa, alamat, telp, username, password } = req.body;
+    const { nama_siswa, alamat, telp, username, password } = req.body as {
+      nama_siswa?: string;
+      alamat?: string;
+      telp?: string;
+      username?: string;
+      password?: string;
+    };
 
-    // Basic validation
     if (!nama_siswa || !username || !password) {
-      res.status(400).json({
-        msg: "Field nama_siswa, username, dan password wajib diisi",
-      });
+      res.status(400).json({ msg: "Field nama_siswa, username, dan password wajib diisi" });
       return;
     }
 
-    // Cek username unik
+    // cek username unik
     const exist = await prisma.users.findUnique({ where: { username } });
     if (exist) {
       res.status(409).json({ msg: "Username sudah digunakan" });
@@ -31,25 +32,27 @@ export const registerSiswa = async (
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const foto = (req as any).file?.filename || null;
 
-    // Pakai transaction supaya konsisten antara users & siswa
+    // ambil foto upload (kalau ada)
+    const foto = req.file?.filename ?? null;
+
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.users.create({
         data: {
           username,
           password: hashed,
-          role: "siswa", // UserRole.siswa
+          role: "siswa",
         },
+        select: { id: true, username: true, role: true },
       });
 
       const siswa = await tx.siswa.create({
         data: {
           nama_siswa,
-          alamat,
-          telp,
+          alamat: alamat ?? null,
+          telp: telp ?? null,
           foto,
-          id_user: user.id, // relasi ke users.id (sesuai schema)
+          id_user: user.id,
         },
       });
 
@@ -58,11 +61,7 @@ export const registerSiswa = async (
 
     res.status(201).json({
       msg: "Register siswa berhasil",
-      user: {
-        id: result.user.id,
-        username: result.user.username,
-        role: result.user.role,
-      },
+      user: result.user,
       siswa: result.siswa,
     });
   } catch (error: any) {
@@ -73,21 +72,19 @@ export const registerSiswa = async (
 
 /**
  * REGISTER ADMIN STAN
- * Endpoint contoh: POST /auth/register/stan
+ * POST /auth/register/stan
+ * multipart/form-data (kalau upload foto) atau JSON (kalau tanpa foto)
  */
-export const registerStan = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const registerStan = async (req: Request, res: Response): Promise<void> => {
   try {
-    // makerId dikirim di header (opsional, buat tracking)
-    const makerId = (req.headers["makerid"] ||
-      req.headers["maker-id"] ||
-      null) as string | null;
+    const { nama_stan, nama_pemilik, telp, username, password } = req.body as {
+      nama_stan?: string;
+      nama_pemilik?: string;
+      telp?: string;
+      username?: string;
+      password?: string;
+    };
 
-    const { nama_stan, nama_pemilik, telp, username, password } = req.body;
-
-    // Simple validation
     if (!nama_stan || !nama_pemilik || !username || !password) {
       res.status(400).json({
         msg: "Field nama_stan, nama_pemilik, username, dan password wajib diisi",
@@ -95,10 +92,7 @@ export const registerStan = async (
       return;
     }
 
-    // cek username unik
-    const existingUser = await prisma.users.findUnique({
-      where: { username },
-    });
+    const existingUser = await prisma.users.findUnique({ where: { username } });
     if (existingUser) {
       res.status(409).json({ msg: "Username sudah terpakai" });
       return;
@@ -106,22 +100,26 @@ export const registerStan = async (
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Transaction: buat user + stan bareng
+    // ambil foto upload (kalau ada) -> pastikan stan schema sudah ada foto String?
+    const foto = req.file?.filename ?? null;
+
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.users.create({
         data: {
           username,
           password: hashed,
-          role: "admin_stan", // UserRole.admin_stan
+          role: "admin_stan",
         },
+        select: { id: true, username: true, role: true },
       });
 
       const stan = await tx.stan.create({
         data: {
           nama_stan,
           nama_pemilik,
-          telp: telp || null,
-          id_user: user.id, // relasi ke users.id
+          telp: telp ?? null,
+          foto, // ✅ kalau kolom foto sudah ada
+          id_user: user.id,
         },
       });
 
@@ -130,18 +128,8 @@ export const registerStan = async (
 
     res.status(201).json({
       msg: "Register stan berhasil",
-      user: {
-        id: result.user.id,
-        username: result.user.username,
-        role: result.user.role,
-      },
-      stan: {
-        id: result.stan.id,
-        nama_stan: result.stan.nama_stan,
-        nama_pemilik: result.stan.nama_pemilik,
-        telp: result.stan.telp,
-        id_user: result.stan.id_user,
-      },
+      user: result.user,
+      stan: result.stan,
     });
   } catch (err: any) {
     console.error(err);

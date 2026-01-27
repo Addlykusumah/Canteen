@@ -139,34 +139,27 @@ export const getDiskonByStan = async (req: Request, res: Response) => {
     const stan = await prisma.stan.findFirst({ where: { id_user } });
     if (!stan) return res.status(403).json({ error: "Stan tidak ditemukan" });
 
-    // Cari semua menu milik stan ini
-    const menus = await prisma.menu.findMany({
-      where: { id_stan: stan.id },
-      select: { id: true },
-    });
-
-    const menuIds = menus.map((m) => m.id);
-    if (!menuIds.length) {
-      return res.json([]);
-    }
-
-    // Ambil diskon lewat menu_diskon
+    // Ambil diskon yang berelasi ke menu milik stan ini, tapi return DISKON saja (unik)
     const relasi = await prisma.menu_diskon.findMany({
-      where: { id_menu: { in: menuIds } },
-      include: {
+      where: { menu: { id_stan: stan.id } },
+      select: {
         diskon: true,
-        menu: {
-          select: { id: true, nama_makanan: true },
-        },
       },
     });
 
-    res.json(relasi);
+    // unikkan diskon (karena satu diskon bisa nempel di banyak menu)
+    const map = new Map<number, any>();
+    for (const r of relasi) {
+      map.set(r.diskon.id, r.diskon);
+    }
+
+    return res.json(Array.from(map.values()));
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: err.message || "Server error" });
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 };
+
 
 export const updateDiskon = async (req: Request, res: Response) => {
   try {
@@ -563,6 +556,184 @@ export const updateMenuDiskon = async (req: Request, res: Response) => {
       msg: "Menu diskon berhasil diupdate",
       menu_diskon: updated,
     });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const deleteMenuDiskon = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ msg: "ID menu_diskon tidak valid" });
+    }
+
+    const id_user = (req as any).user?.id;
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+
+    // Cari pivot + menu + stan untuk validasi kepemilikan
+    const pivot = await prisma.menu_diskon.findUnique({
+      where: { id },
+      include: {
+        menu: {
+          include: { stan: true },
+        },
+        diskon: true,
+      },
+    });
+
+    if (!pivot) {
+      return res.status(404).json({ msg: "Relasi menu-diskon tidak ditemukan" });
+    }
+
+    // pastikan admin yang login adalah pemilik stan dari menu tersebut
+    if (pivot.menu.stan.id_user !== id_user) {
+      return res.status(403).json({ msg: "Akses ditolak (bukan milik stan Anda)" });
+    }
+
+    await prisma.menu_diskon.delete({ where: { id } });
+
+    return res.json({
+      msg: "Menu diskon berhasil dihapus",
+      deleted: {
+        id: pivot.id,
+        id_menu: pivot.id_menu,
+        id_diskon: pivot.id_diskon,
+      },
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const getMenuDiskonByStan = async (req: Request, res: Response) => {
+  try {
+    const id_user = (req as any).user?.id;
+    if (!id_user) return res.status(401).json({ error: "Unauthorized" });
+
+    const stan = await prisma.stan.findFirst({ where: { id_user } });
+    if (!stan) return res.status(403).json({ error: "Stan tidak ditemukan" });
+
+    const now = new Date();
+
+    const relasi = await prisma.menu_diskon.findMany({
+      where: {
+        menu: { id_stan: stan.id },
+      },
+      include: {
+        diskon: true,
+        menu: {
+          select: {
+            id: true,
+            nama_makanan: true,
+            harga: true,
+            jenis: true,
+            foto: true,
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+    });
+
+    const data = relasi.map((r) => {
+      const hargaAsli = r.menu.harga;
+      const persen = r.diskon.persentase_diskon;
+      const hargaSetelahDiskon = hargaAsli - hargaAsli * (persen / 100);
+
+      let status: "aktif" | "akan_datang" | "expired";
+      if (now < r.diskon.tanggal_awal) status = "akan_datang";
+      else if (now > r.diskon.tanggal_akhir) status = "expired";
+      else status = "aktif";
+
+      return {
+        id: r.id,
+        menu: r.menu,
+        diskon: r.diskon,
+        harga_setelah_diskon: hargaSetelahDiskon,
+        status_diskon: status, // optional tapi sangat berguna
+      };
+    });
+
+    return res.json({
+      count: data.length,
+      data,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+
+export const getMenuDiskonSiswa = async (req: Request, res: Response) => {
+  try {
+    const now = new Date();
+
+    const stanIdQ = req.query.stan_id ? Number(req.query.stan_id) : undefined;
+    if (req.query.stan_id && (isNaN(stanIdQ!) || stanIdQ! <= 0)) {
+      return res.status(400).json({ error: "stan_id tidak valid" });
+    }
+
+    const jenisQ = req.query.jenis as "makanan" | "minuman" | undefined;
+    if (jenisQ && jenisQ !== "makanan" && jenisQ !== "minuman") {
+      return res.status(400).json({ error: 'jenis harus "makanan" atau "minuman"' });
+    }
+
+    const search = (req.query.search as string | undefined)?.trim();
+
+    // Bangun filter menu dengan benar (gabung semua kondisi jadi 1 object)
+    const menuWhere: any = {};
+    if (stanIdQ) menuWhere.id_stan = stanIdQ;
+    if (jenisQ) menuWhere.jenis = jenisQ;
+    if (search) menuWhere.nama_makanan = { contains: search }; // <-- tanpa mode
+
+    const relasiAktif = await prisma.menu_diskon.findMany({
+      where: {
+        diskon: {
+          tanggal_awal: { lte: now },
+          tanggal_akhir: { gte: now },
+        },
+        ...(Object.keys(menuWhere).length ? { menu: menuWhere } : {}),
+      },
+      include: {
+        menu: {
+          include: { stan: { select: { id: true, nama_stan: true } } },
+        },
+        diskon: true,
+      },
+      orderBy: { id: "desc" },
+    });
+
+    const data = relasiAktif.map((r) => {
+      const hargaAsli = r.menu.harga;
+      const persen = r.diskon.persentase_diskon;
+      const hargaSetelahDiskon = hargaAsli - hargaAsli * (persen / 100);
+
+      return {
+        menu_diskon_id: r.id,
+        menu: {
+          id: r.menu.id,
+          nama_makanan: r.menu.nama_makanan,
+          harga: hargaAsli,
+          jenis: r.menu.jenis,
+          foto: r.menu.foto,
+          deskripsi: r.menu.deskripsi,
+          stan: r.menu.stan,
+        },
+        diskon: {
+          id: r.diskon.id,
+          nama_diskon: r.diskon.nama_diskon,
+          persentase_diskon: persen,
+          tanggal_awal: r.diskon.tanggal_awal,
+          tanggal_akhir: r.diskon.tanggal_akhir,
+        },
+        harga_setelah_diskon: hargaSetelahDiskon,
+      };
+    });
+
+    return res.json({ count: data.length, data });
   } catch (err: any) {
     console.error(err);
     return res.status(500).json({ error: err.message || "Server error" });
