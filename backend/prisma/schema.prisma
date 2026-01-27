@@ -10,9 +10,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-
-    
-   
 }
 
 //
@@ -53,16 +50,16 @@ model users {
 // SISWA
 //
 model siswa {
-  id          Int      @id @default(autoincrement())
-  nama_siswa  String
-  alamat      String?
-  telp        String?
-  foto        String?
-  id_user     Int
+  id         Int     @id @default(autoincrement())
+  nama_siswa String
+  alamat     String?
+  telp       String?
+  foto       String?
+  id_user    Int
 
   // Relation
-  user        users    @relation(fields: [id_user], references: [id])
-  transaksi   transaksi[]
+  user      users       @relation(fields: [id_user], references: [id])
+  transaksi transaksi[]
 }
 
 //
@@ -73,21 +70,20 @@ model stan {
   nama_stan    String
   nama_pemilik String
   telp         String?
-  foto         String?      
+  foto         String?
   id_user      Int
 
   // Relation
-  user         users   @relation(fields: [id_user], references: [id])
-  menu         menu[]
-  transaksi    transaksi[]
+  user      users       @relation(fields: [id_user], references: [id])
+  menu      menu[]
+  transaksi transaksi[]
 }
-   
 
 //
 // MENU
 //
 model menu {
-  id           Int        @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   nama_makanan String
   harga        Float
   jenis        JenisMenu
@@ -96,7 +92,7 @@ model menu {
   id_stan      Int
 
   // Relation
-  stan             stan          @relation(fields: [id_stan], references: [id])
+  stan             stan               @relation(fields: [id_stan], references: [id])
   detail_transaksi detail_transaksi[]
   menu_diskon      menu_diskon[]
 }
@@ -105,21 +101,21 @@ model menu {
 // DISKON
 //
 model diskon {
-  id               Int          @id @default(autoincrement())
-  nama_diskon      String
+  id                Int      @id @default(autoincrement())
+  nama_diskon       String
   persentase_diskon Float
-  tanggal_awal     DateTime
-  tanggal_akhir    DateTime
+  tanggal_awal      DateTime
+  tanggal_akhir     DateTime
 
-  menu_diskon      menu_diskon[]
+  menu_diskon menu_diskon[]
 }
 
 //
 // MENU_DISKON (Pivot Table Many-to-Many)
 //
 model menu_diskon {
-  id       Int   @id @default(autoincrement())
-  id_menu  Int
+  id        Int @id @default(autoincrement())
+  id_menu   Int
   id_diskon Int
 
   menu   menu   @relation(fields: [id_menu], references: [id])
@@ -130,30 +126,29 @@ model menu_diskon {
 // TRANSAKSI
 //
 model transaksi {
-  id         Int             @id @default(autoincrement())
-  tanggal    DateTime
-  id_stan    Int
-  id_siswa   Int
-  status     StatusTransaksi
+  id       Int             @id @default(autoincrement())
+  tanggal  DateTime
+  id_stan  Int
+  id_siswa Int
+  status   StatusTransaksi
 
   // Relation
-  stan              stan              @relation(fields: [id_stan], references: [id])
-  siswa             siswa             @relation(fields: [id_siswa], references: [id])
-  detail_transaksi  detail_transaksi[]
+  stan             stan               @relation(fields: [id_stan], references: [id])
+  siswa            siswa              @relation(fields: [id_siswa], references: [id])
+  detail_transaksi detail_transaksi[]
 }
 
 //
 // DETAIL_TRANSAKSI
 //
 model detail_transaksi {
-  id            Int     @id @default(autoincrement())
-  id_transaksi  Int
-  id_menu       Int
-  qty           Int
-  harga_beli    Float
+  id           Int   @id @default(autoincrement())
+  id_transaksi Int
+  id_menu      Int
+  qty          Int
+  harga_beli   Float
 
   // Relations
   transaksi transaksi @relation(fields: [id_transaksi], references: [id])
   menu      menu      @relation(fields: [id_menu], references: [id])
 }
-

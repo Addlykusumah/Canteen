@@ -9,7 +9,10 @@ const prisma = new PrismaClient();
  * POST /auth/register/siswa
  * multipart/form-data (kalau upload foto) atau JSON (kalau tanpa foto)
  */
-export const registerSiswa = async (req: Request, res: Response): Promise<void> => {
+export const registerSiswa = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const { nama_siswa, alamat, telp, username, password } = req.body as {
       nama_siswa?: string;
@@ -20,7 +23,9 @@ export const registerSiswa = async (req: Request, res: Response): Promise<void> 
     };
 
     if (!nama_siswa || !username || !password) {
-      res.status(400).json({ msg: "Field nama_siswa, username, dan password wajib diisi" });
+      res
+        .status(400)
+        .json({ msg: "Field nama_siswa, username, dan password wajib diisi" });
       return;
     }
 
@@ -75,7 +80,10 @@ export const registerSiswa = async (req: Request, res: Response): Promise<void> 
  * POST /auth/register/stan
  * multipart/form-data (kalau upload foto) atau JSON (kalau tanpa foto)
  */
-export const registerStan = async (req: Request, res: Response): Promise<void> => {
+export const registerStan = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const { nama_stan, nama_pemilik, telp, username, password } = req.body as {
       nama_stan?: string;

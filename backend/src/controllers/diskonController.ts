@@ -160,7 +160,6 @@ export const getDiskonByStan = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateDiskon = async (req: Request, res: Response) => {
   try {
     const id_diskon = Number(req.params.id);
@@ -308,7 +307,7 @@ export const deleteDiskon = async (req: Request, res: Response) => {
     }
 
     const relasiMenuStan = diskon.menu_diskon.some(
-      (md) => md.menu?.id_stan === stan.id
+      (md) => md.menu?.id_stan === stan.id,
     );
 
     if (!relasiMenuStan) {
@@ -528,7 +527,7 @@ export const updateMenuDiskon = async (req: Request, res: Response) => {
       });
     }
 
-    // cek apakah kombinasi (id_menu, id_diskon) 
+    // cek apakah kombinasi (id_menu, id_diskon)
     const duplicate = await prisma.menu_diskon.findFirst({
       where: {
         id_menu: newMenuId,
@@ -584,12 +583,16 @@ export const deleteMenuDiskon = async (req: Request, res: Response) => {
     });
 
     if (!pivot) {
-      return res.status(404).json({ msg: "Relasi menu-diskon tidak ditemukan" });
+      return res
+        .status(404)
+        .json({ msg: "Relasi menu-diskon tidak ditemukan" });
     }
 
     // pastikan admin yang login adalah pemilik stan dari menu tersebut
     if (pivot.menu.stan.id_user !== id_user) {
-      return res.status(403).json({ msg: "Akses ditolak (bukan milik stan Anda)" });
+      return res
+        .status(403)
+        .json({ msg: "Akses ditolak (bukan milik stan Anda)" });
     }
 
     await prisma.menu_diskon.delete({ where: { id } });
@@ -666,7 +669,6 @@ export const getMenuDiskonByStan = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getMenuDiskonSiswa = async (req: Request, res: Response) => {
   try {
     const now = new Date();
@@ -678,7 +680,9 @@ export const getMenuDiskonSiswa = async (req: Request, res: Response) => {
 
     const jenisQ = req.query.jenis as "makanan" | "minuman" | undefined;
     if (jenisQ && jenisQ !== "makanan" && jenisQ !== "minuman") {
-      return res.status(400).json({ error: 'jenis harus "makanan" atau "minuman"' });
+      return res
+        .status(400)
+        .json({ error: 'jenis harus "makanan" atau "minuman"' });
     }
 
     const search = (req.query.search as string | undefined)?.trim();

@@ -271,10 +271,7 @@ export const PemasukanAdmin = async (req: Request, res: Response) => {
   }
 };
 
-export const HistoriAdmin = async (
-  req: Request,
-  res: Response,
-) => {
+export const HistoriAdmin = async (req: Request, res: Response) => {
   try {
     const id_user = (req as any).user?.id;
     const role = (req as any).user?.role;
@@ -344,6 +341,88 @@ export const HistoriAdmin = async (
       jumlahTransaksi: data.length,
       totalBulanIni,
       transaksi: data,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
+export const updateStatusTransaksi = async (req: Request, res: Response) => {
+  try {
+    const id_user = (req as any).user?.id;
+    if (!id_user) {
+      return res.status(401).json({ msg: "Unauthorized" });
+    }
+
+    const id_transaksi = Number(req.params.id);
+    if (isNaN(id_transaksi)) {
+      return res.status(400).json({ msg: "ID transaksi tidak valid" });
+    }
+
+    const { status } = req.body as { status?: StatusTransaksi };
+
+    if (!status) {
+      return res.status(400).json({ msg: "Status wajib diisi" });
+    }
+
+    // Validasi enum
+    if (!Object.values(StatusTransaksi).includes(status)) {
+      return res.status(400).json({
+        msg: `Status tidak valid. Pilihan: ${Object.values(StatusTransaksi).join(", ")}`,
+      });
+    }
+
+    // Cari stan milik admin ini
+    const stan = await prisma.stan.findFirst({
+      where: { id_user },
+    });
+
+    if (!stan) {
+      return res.status(403).json({ msg: "Stan tidak ditemukan" });
+    }
+
+    // Cari transaksi
+    const transaksi = await prisma.transaksi.findUnique({
+      where: { id: id_transaksi },
+    });
+
+    if (!transaksi) {
+      return res.status(404).json({ msg: "Transaksi tidak ditemukan" });
+    }
+
+    // Pastikan transaksi milik stan ini
+    if (transaksi.id_stan !== stan.id) {
+      return res.status(403).json({
+        msg: "Anda tidak berhak mengubah transaksi ini",
+      });
+    }
+
+    // OPTIONAL: validasi alur status (biar tidak lompat)
+    const statusOrder = [
+      StatusTransaksi.belum_dikonfirm,
+      StatusTransaksi.dimasak,
+      StatusTransaksi.diantar,
+      StatusTransaksi.sampai,
+    ];
+
+    const currentIndex = statusOrder.indexOf(transaksi.status);
+    const nextIndex = statusOrder.indexOf(status);
+
+    if (nextIndex < currentIndex) {
+      return res.status(400).json({
+        msg: `Tidak boleh mengubah status mundur dari ${transaksi.status} ke ${status}`,
+      });
+    }
+
+    const updated = await prisma.transaksi.update({
+      where: { id: id_transaksi },
+      data: { status },
+    });
+
+    return res.json({
+      msg: "Status transaksi berhasil diubah",
+      transaksi: updated,
     });
   } catch (err: any) {
     console.error(err);

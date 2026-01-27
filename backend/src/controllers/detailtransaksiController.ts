@@ -15,7 +15,12 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
 
     const siswa = await prisma.siswa.findFirst({ where: { id_user } });
     if (!siswa)
-      return res.status(403).json({ status: false, msg: "Hanya siswa yang dapat melihat nota transaksi" });
+      return res
+        .status(403)
+        .json({
+          status: false,
+          msg: "Hanya siswa yang dapat melihat nota transaksi",
+        });
 
     const trx = await prisma.transaksi.findFirst({
       where: { id: id_transaksi, id_siswa: siswa.id },
@@ -29,7 +34,9 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
     });
 
     if (!trx)
-      return res.status(404).json({ status: false, msg: "Transaksi tidak ditemukan" });
+      return res
+        .status(404)
+        .json({ status: false, msg: "Transaksi tidak ditemukan" });
 
     const detail = trx.detail_transaksi.map((d) => ({
       nama: d.menu.nama_makanan,
@@ -50,10 +57,15 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
       });
 
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename=struk-${trx.id}.pdf`);
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename=struk-${trx.id}.pdf`,
+      );
 
       // HEADER (nama stan)
-      doc.fontSize(12).text(trx.stan.nama_stan.toUpperCase(), { align: "center" });
+      doc
+        .fontSize(12)
+        .text(trx.stan.nama_stan.toUpperCase(), { align: "center" });
       doc.moveDown(0.3);
 
       doc.fontSize(8).text("Kantin Sekolah", { align: "center" });
@@ -64,7 +76,11 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
       doc.text("--------------------------------", { align: "center" });
 
       // INFO TRANSAKSI
-      doc.fontSize(8).text(`Tanggal : ${trx.tanggal.toLocaleDateString()} ${trx.tanggal.toLocaleTimeString()}`);
+      doc
+        .fontSize(8)
+        .text(
+          `Tanggal : ${trx.tanggal.toLocaleDateString()} ${trx.tanggal.toLocaleTimeString()}`,
+        );
       doc.text(`Siswa   : ${trx.siswa.nama_siswa}`);
       doc.text(`Status  : ${trx.status}`);
       doc.moveDown(0.5);
@@ -74,9 +90,11 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
       // DETAIL ITEMS
       detail.forEach((item) => {
         doc.fontSize(9).text(item.nama);
-        doc.fontSize(8).text(
-          `${item.qty} x Rp${item.harga.toLocaleString()}   Rp${item.subtotal.toLocaleString()}`
-        );
+        doc
+          .fontSize(8)
+          .text(
+            `${item.qty} x Rp${item.harga.toLocaleString()}   Rp${item.subtotal.toLocaleString()}`,
+          );
         doc.moveDown(0.2);
       });
 
@@ -114,7 +132,6 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
         total,
       },
     });
-
   } catch (err: any) {
     console.error(err);
     return res.status(500).json({

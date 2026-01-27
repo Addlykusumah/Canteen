@@ -23,7 +23,7 @@ router.get("/menu/detail/:id", authMiddleware, onlyAdminStan, getDetailMenu);
 router.post("/menu/tambah", authMiddleware, onlyAdminStan, upload.single("foto"), createMenu);
 
 // UPDATE menu
-router.post("/menu/update/:id", authMiddleware, onlyAdminStan, upload.single("foto"), updateMenu);
+router.put("/menu/update/:id", authMiddleware, onlyAdminStan, upload.single("foto"), updateMenu);
 
 // HAPUS menu
 router.delete("/menu/hapus/:id", authMiddleware, onlyAdminStan, deleteMenu);

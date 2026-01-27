@@ -11,16 +11,14 @@ export const getAllMenu = async (req: Request, res: Response) => {
     if (!stan) return res.status(403).json({ msg: "Stan tidak ditemukan" });
 
     const menu = await prisma.menu.findMany({
-      where: { id_stan: stan.id }
+      where: { id_stan: stan.id },
     });
 
     res.json(menu);
-    
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const getDetailMenu = async (req: Request, res: Response) => {
   try {
@@ -30,12 +28,10 @@ export const getDetailMenu = async (req: Request, res: Response) => {
     if (!menu) return res.status(404).json({ msg: "Menu tidak ditemukan" });
 
     res.json(menu);
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const createMenu = async (req: Request, res: Response) => {
   try {
@@ -54,17 +50,15 @@ export const createMenu = async (req: Request, res: Response) => {
         harga: Number(harga),
         deskripsi,
         foto,
-        id_stan: stan.id
-      }
+        id_stan: stan.id,
+      },
     });
 
     res.json({ msg: "Menu berhasil ditambah", menu });
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const updateMenu = async (req: Request, res: Response) => {
   try {
@@ -83,12 +77,11 @@ export const updateMenu = async (req: Request, res: Response) => {
         jenis,
         harga: harga ? Number(harga) : menu.harga,
         deskripsi,
-        foto: fotoBaru
-      }
+        foto: fotoBaru,
+      },
     });
 
     res.json({ msg: "Menu berhasil diupdate", menu: updated });
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -97,7 +90,7 @@ export const updateMenu = async (req: Request, res: Response) => {
 export const searchMenu = async (req: Request, res: Response) => {
   try {
     const id_user = (req as any).user.id;
-    const search = req.params.keyword?.toLowerCase() || ""; 
+    const search = req.params.keyword?.toLowerCase() || "";
 
     const stan = await prisma.stan.findFirst({ where: { id_user } });
     if (!stan) return res.status(403).json({ msg: "Stan tidak ditemukan" });
@@ -107,26 +100,21 @@ export const searchMenu = async (req: Request, res: Response) => {
       where: {
         id_stan: stan.id,
         nama_makanan: {
-          contains: search
-        }
-      }
+          contains: search,
+        },
+      },
     });
 
     // Filter manual agar lebih akurat (opsional)
-    const filtered = menu.filter(m =>
-      m.nama_makanan.toLowerCase().includes(search)
+    const filtered = menu.filter((m) =>
+      m.nama_makanan.toLowerCase().includes(search),
     );
 
     res.json(filtered);
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
-
-
-
-
 
 export const deleteMenu = async (req: Request, res: Response) => {
   try {
@@ -138,7 +126,6 @@ export const deleteMenu = async (req: Request, res: Response) => {
     await prisma.menu.delete({ where: { id } });
 
     res.json({ msg: "Menu berhasil dihapus" });
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

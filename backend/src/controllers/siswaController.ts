@@ -23,7 +23,8 @@ export const getProfileSiswa = async (req: Request, res: Response) => {
       where: { id_user },
     });
 
-    if (!siswa) return res.status(404).json({ msg: "Data siswa tidak ditemukan" });
+    if (!siswa)
+      return res.status(404).json({ msg: "Data siswa tidak ditemukan" });
 
     return res.json({
       msg: "Berhasil mengambil profile",
@@ -49,7 +50,8 @@ export const updateProfileSiswa = async (req: Request, res: Response) => {
       where: { id_user },
     });
 
-    if (!siswa) return res.status(404).json({ msg: "Data siswa tidak ditemukan" });
+    if (!siswa)
+      return res.status(404).json({ msg: "Data siswa tidak ditemukan" });
 
     const { nama_siswa, alamat, telp, username } = req.body;
 

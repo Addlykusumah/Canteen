@@ -30,7 +30,6 @@ export const getProfileStan = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateStanProfile = async (req: Request, res: Response) => {
   try {
     const id_user = (req as any).user?.id;

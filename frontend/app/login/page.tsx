@@ -23,7 +23,7 @@ export default function LoginPortalPage() {
           Silakan pilih peran untuk melanjutkan login.
         </p>
 
-        {/* Role options */}
+        
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
           {/* Siswa */}
           <Link
@@ -49,7 +49,7 @@ export default function LoginPortalPage() {
             </div>
           </Link>
 
-          {/* Admin */}
+          
           <Link
             href="/admin/login"
             className="group rounded-2xl border border-slate-200 p-6 transition hover:border-violet-300 hover:shadow-md"

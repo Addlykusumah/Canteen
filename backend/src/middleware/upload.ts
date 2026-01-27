@@ -29,7 +29,6 @@ const storage: StorageEngine = multer.diskStorage({
   },
 });
 
-
 const fileFilter: multer.Options["fileFilter"] = (req, file, cb) => {
   if (!file.mimetype.startsWith("image/")) {
     cb(new Error("File harus berupa gambar"));

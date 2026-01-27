@@ -11,7 +11,7 @@ dotenv.config();
 export const authMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
@@ -41,7 +41,7 @@ export const authMiddleware = (
 export const onlyAdminStan = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const user = (req as any).user;
 
