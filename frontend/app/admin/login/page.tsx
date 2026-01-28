@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { storeCookie } from "@/lib/client-cookies";
 import { FormEvent, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -18,7 +17,6 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -31,48 +29,36 @@ const LoginPage = () => {
 
       const { msg, token, user, siswa } = data;
 
-      if (user) {
-        // ✅ TOAST LOGIN SUKSES (TETAP ADA)
-        toast(msg, {
-          hideProgressBar: true,
-          containerId: "toastLogin",
-          type: "success",
-          autoClose: 2000,
-        });
-
-        storeCookie("token", token);
-        storeCookie("id", user.id.toString());
-        storeCookie(
-          "name",
-          user.role === "siswa" && siswa ? siswa.nama_siswa : user.username
-        );
-        storeCookie("role", user.role);
-
-        setTimeout(() => {
-          if (user.role === "siswa") router.replace("/dashboard");
-          else if (user.role === "admin_stan")
-            router.replace("/cashier/dashboard");
-        }, 300);
-      } else {
-        toast(msg || "Username atau password salah", {
-          hideProgressBar: true,
-          containerId: "toastLogin",
-          type: "warning",
-          autoClose: 2000,
-        });
+      if (!user || !token) {
+        toast.warning(msg || "Username atau password salah");
+        return;
       }
+
+      // ✅ LOGIN SUKSES
+      toast.success(msg || "Login berhasil");
+
+      storeCookie("token", token);
+      storeCookie("id", user.id.toString());
+      storeCookie(
+        "name",
+        user.role === "siswa" && siswa ? siswa.nama_siswa : user.username
+      );
+      storeCookie("role", user.role);
+
+      setTimeout(() => {
+        if (user.role === "siswa") {
+          router.replace("/dashboard");
+        } else if (user.role === "admin_stan") {
+          router.replace("/cashier/dashboard");
+        }
+      }, 300);
     } catch (error: any) {
       const message =
         error.response?.data?.msg ||
         error.response?.data?.error ||
         "Something went wrong";
 
-      toast(message, {
-        hideProgressBar: true,
-        containerId: "toastLogin",
-        type: "error",
-        autoClose: 2000,
-      });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -80,9 +66,6 @@ const LoginPage = () => {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* ✅ Toast container tetap */}
-      <ToastContainer containerId="toastLogin" />
-
       <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
         {/* LEFT */}
         <section className="flex items-center justify-center px-8 py-12 lg:px-20">
@@ -112,6 +95,7 @@ const LoginPage = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 px-5 py-4 text-base focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+                required
               />
 
               <input
@@ -120,18 +104,8 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 px-5 py-4 text-base focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+                required
               />
-
-              <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-3 text-sm text-slate-600">
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 rounded border-slate-300 text-violet-600"
-                    defaultChecked
-                  />
-                  Remember me
-                </label>
-              </div>
 
               <button
                 type="submit"
@@ -156,17 +130,15 @@ const LoginPage = () => {
 
         {/* RIGHT */}
         <section className="relative hidden lg:block h-screen w-full">
-          <div className="absolute inset-0 overflow-hidden  from-violet-500 to-indigo-500">
-            <div className="absolute inset-0 flex items-center justify-center px-10">
-              <div className="relative h-[700px] w-[1500px]">
-                <Image
-                  src="/image/3dKantin.png"
-                  alt="Illustration"
-                  fill
-                  priority
-                  className="object-contain"
-                />
-              </div>
+          <div className="absolute inset-0 flex items-center justify-center px-10">
+            <div className="relative h-[700px] w-[1500px]">
+              <Image
+                src="/image/3dKantin.png"
+                alt="Illustration"
+                fill
+                priority
+                className="object-contain"
+              />
             </div>
           </div>
         </section>
