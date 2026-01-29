@@ -1,11 +1,10 @@
 "use client";
-
 import Link from "next/link";
 import { BASE_API_URL } from "../../../global";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { storeCookie } from "@/lib/client-cookies";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";                                                                                                                                                                                                                                                                                                                                                                                                                                                  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -35,7 +34,8 @@ const LoginPage = () => {
       }
 
       toast.success(msg || "Login berhasil");
-
+    
+      
       storeCookie("token", token);
       storeCookie("id", user.id.toString());
       storeCookie(
@@ -45,9 +45,9 @@ const LoginPage = () => {
       storeCookie("role", user.role);
 
       setTimeout(() => {
-        if (user.role === "siswa") router.replace("/dashboard");
+        if (user.role === "siswa") router.replace("/siswa/dashboard");
         else if (user.role === "admin_stan")
-          router.replace("/cashier/dashboard");
+          router.replace("/admin_stan/dashboard");
       }, 300);
     } catch (error: any) {
       toast.error(
@@ -64,8 +64,8 @@ const LoginPage = () => {
     <main className="h-screen overflow-hidden bg-white">
       <div className="grid h-full w-full grid-cols-1 lg:grid-cols-2">
         {/* LEFT */}
-      <section className="flex h-full flex-col items-start justify-center px-8 py-8 lg:px-20 overflow-y-auto
-  lg:shadow-[1px_0_0_0_rgba(0,0,0,0.08)]">
+     <section className="flex h-full flex-col items-start justify-center px-8 py-8 lg:px-20 overflow-y-auto">
+
 
           <div className="w-full max-w-md justify-start pb-4">
             {/* Logo */}

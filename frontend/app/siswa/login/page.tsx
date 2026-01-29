@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { BASE_API_URL } from "../../../global";
 import { useRouter } from "next/navigation";
@@ -8,6 +7,7 @@ import axios from "axios";
 import { storeCookie } from "@/lib/client-cookies";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -34,113 +34,116 @@ const LoginPage = () => {
         return;
       }
 
-      // ✅ LOGIN SUKSES
       toast.success(msg || "Login berhasil");
 
       storeCookie("token", token);
       storeCookie("id", user.id.toString());
       storeCookie(
         "name",
-        user.role === "siswa" && siswa ? siswa.nama_siswa : user.username
+        user.role === "siswa" && siswa ? siswa.nama_siswa : user.username,
       );
       storeCookie("role", user.role);
 
       setTimeout(() => {
-        if (user.role === "siswa") {
-          router.replace("/dashboard");
-        } else if (user.role === "admin_stan") {
+        if (user.role === "siswa") router.replace("/dashboard");
+        else if (user.role === "admin_stan")
           router.replace("/cashier/dashboard");
-        }
       }, 300);
     } catch (error: any) {
-      const message =
+      toast.error(
         error.response?.data?.msg ||
-        error.response?.data?.error ||
-        "Something went wrong";
-
-      toast.error(message);
+          error.response?.data?.error ||
+          "Something went wrong",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
+    <main className="h-screen overflow-hidden bg-white">
+      <div className="grid h-full w-full grid-cols-1 lg:grid-cols-2">
         {/* LEFT */}
-        <section className="flex items-center justify-center px-8 py-12 lg:px-20">
-          <div className="w-full max-w-xl">
-            <div className="mb-14 flex items-center gap-3">
-              <span className="h-3 w-3 rounded-sm bg-violet-600" />
-              <span className="text-base font-semibold text-slate-700">
-                KantinKu
-              </span>
+      <section className="flex h-full flex-col items-start justify-center px-8 py-8 lg:px-20 overflow-y-auto
+  lg:shadow-[1px_0_0_0_rgba(0,0,0,0.08)]">
+
+          <div className="w-full max-w-md justify-start pb-4">
+            {/* Logo */}
+            <div className="h-15  flex items-center">
+              <Image
+                src="/image/logo.png"
+                alt="Go Makan Logo"
+                width={200}
+                height={150}
+                className="translate-x-22  object-contain"
+                priority
+              />
             </div>
 
-            <h1 className="text-5xl font-extrabold text-slate-900 lg:text-6xl">
-              Selamat Datang
-            </h1>
-            <h2 className="text-5xl font-extrabold text-violet-600 lg:text-6xl">
-              Di Kantin Online
-            </h2>
-
-            <p className="mt-4 text-base text-slate-500 lg:text-lg">
-              Silakan masukkan username dan password anda
+            <p className="mt-2 translate-y-4 translate-x-8 text-sm text-slate-500">
+              Enter your username and password to access your account.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-12 space-y-5">
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-5 py-4 text-base focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
-                required
-              />
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  placeholder="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                />
+              </div>
 
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-5 py-4 text-base focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
-                required
-              />
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-3 inline-flex w-44 items-center justify-center rounded-xl bg-violet-600 px-6 py-4 text-base font-semibold text-white hover:bg-violet-700 disabled:opacity-60"
+                className="mt-6 w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
               >
-                {loading ? "Loading..." : "Sign In"}
+                {loading ? "Logging in..." : "Log In"}
               </button>
-
-              <p className="pt-10 text-sm text-slate-500">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/siswa/register"
-                  className="font-semibold text-violet-600 hover:underline"
-                >
-                  Sign Up.
-                </Link>
-              </p>
             </form>
+
+            <p className="mt-5 text-center text-xs text-slate-600">
+              Don&apos;t Have An Account?{" "}
+              <Link
+                href="/siswa/register"
+                className="font-semibold text-yellow-600 hover:underline"
+              >
+                Register Now.
+              </Link>
+            </p>
           </div>
         </section>
 
         {/* RIGHT */}
-        <section className="relative hidden lg:block h-screen w-full">
-          <div className="absolute inset-0 flex items-center justify-center px-10">
-            <div className="relative h-[700px] w-[1500px]">
-              <Image
-                src="/image/3dKantin.png"
-                alt="Illustration"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div>
-          </div>
+        <section className="hidden lg:flex h-full w-full items-center justify-center">
+          <Image
+            src="/image/icon.png"
+            alt="Login Illustration"
+            width={800}
+            height={800}
+            className=" -translate-x-12 translate-y-4 object-contain"
+            priority
+          />
         </section>
       </div>
     </main>
