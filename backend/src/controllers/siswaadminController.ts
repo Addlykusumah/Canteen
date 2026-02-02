@@ -25,7 +25,7 @@ export const createSiswaAdmin = async (req: Request, res: Response) => {
         .json({ msg: "username, password, nama_siswa diperlukan" });
     }
 
-    // cek username
+    
     const exist = await prisma.users.findUnique({ where: { username } });
     if (exist) return res.status(400).json({ msg: "Username sudah digunakan" });
 

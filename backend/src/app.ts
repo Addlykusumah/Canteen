@@ -5,7 +5,7 @@ dotenv.config();
 
 
 import login from "./routers/authRoute";
-import regristerStanRoute from "./routers/regristerstanRoute";
+import regrister from "./routers/regristerRoute";
 import SiswaAdmin from "./routers/siswaadminRoute";
 import menuRoute from "./routers/menuRoute";
 import diskonRoute from "./routers/diskonRoute";
@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static("public"));
 
 
-app.use("/", regristerStanRoute);
+app.use("/", regrister);
 
 app.use("/", stan);
 

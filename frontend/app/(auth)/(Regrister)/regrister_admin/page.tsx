@@ -3,9 +3,9 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { BASE_API_URL } from "../../../../global"; // sesuaikan path
+import { toast } from "sonner";
+import Image from "next/image";
+import { BASE_API_URL } from "../../../../global";
 
 const RegisterStanPage = () => {
   const router = useRouter();
@@ -15,7 +15,10 @@ const RegisterStanPage = () => {
   const [telp, setTelp] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [foto, setFoto] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -24,142 +27,226 @@ const RegisterStanPage = () => {
     try {
       setLoading(true);
 
-      const url = `${BASE_API_URL}/register_stan`; 
-
-      
       const formData = new FormData();
       formData.append("nama_stan", namaStan);
       formData.append("nama_pemilik", namaPemilik);
       formData.append("telp", telp);
       formData.append("username", username);
       formData.append("password", password);
+      if (foto) formData.append("foto", foto);
 
-      const { data } = await axios.post(url, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const { data } = await axios.post(
+        `${BASE_API_URL}/register_stan`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
 
-      toast(data.msg || data.message || "Register stan berhasil", {
-        containerId: "toastRegisterStan",
-        type: "success",
-        hideProgressBar: true,
-        autoClose: 2000,
-      });
+      toast.success(data.msg || data.message || "Register stan berhasil");
 
       setTimeout(() => {
         router.replace("/login");
       }, 2000);
     } catch (error: any) {
-      console.error(error);
-      const message =
+      toast.error(
         error.response?.data?.msg ||
-        error.response?.data?.error ||
-        "Register stan gagal";
-
-      toast(message, {
-        containerId: "toastRegisterStan",
-        type: "error",
-        hideProgressBar: true,
-        autoClose: 2500,
-      });
+          error.response?.data?.error ||
+          "Register stan gagal",
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const pickFile = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("File harus berupa gambar");
+      return;
+    }
+    setFoto(file);
+  };
+
   return (
-    <div className="w-screen h-screen bg-login">
-      <ToastContainer containerId="toastRegisterStan" />
-      <div className="w-full h-full bg-backdrop-login flex justify-center items-center p-5">
-        <div className="w-full md:w-6/12 lg:w-4/12 min-h-[400px] border rounded-xl bg-white p-5 flex flex-col items-center relative">
-          <div className="absolute bottom-0 left-0 w-full py-2 text-center">
-            <small className="text-slate-600">Copyright @2025</small>
-          </div>
-
-          <h4 className="text-2xl uppercase font-semibold text-primary mb-2">
-            CraveIt
-          </h4>
-          <span className="text-sm text-slate-500 font-medium text-center">
-            Register Admin Stan
-          </span>
-
-          <form onSubmit={handleSubmit} className="w-full my-6 space-y-4">
-            {/* Nama Stan */}
-            <div>
-              <label className="block text-sm mb-1">Nama Stan</label>
-              <input
-                type="text"
-                className="border p-2 w-full rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                value={namaStan}
-                onChange={(e) => setNamaStan(e.target.value)}
-                placeholder="Nama stan"
-                required
+    <main className="h-screen overflow-hidden bg-white">
+      <div className="grid h-full w-full grid-cols-1 lg:grid-cols-2">
+        {/* LEFT */}
+        <section className="flex h-full flex-col items-start justify-center px-8 lg:px-20">
+          <div className="w-full max-w-md">
+            {/* Logo */}
+            <div className="h-14 flex items-center mb-2">
+              <Image
+                src="/image/logo.png"
+                alt="Go Makan Logo"
+                width={180}
+                height={100}
+                className="translate-x-28 object-contain"
+                priority
               />
             </div>
 
-           
-            <div>
-              <label className="block text-sm mb-1">Nama Pemilik</label>
-              <input
-                type="text"
-                className="border p-2 w-full rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                value={namaPemilik}
-                onChange={(e) => setNamaPemilik(e.target.value)}
-                placeholder="Nama pemilik"
-                required
-              />
-            </div>
+            <p className="text-xs translate-x-20 translate-y-2 text-slate-500 mb-3">
+              Lengkapi data untuk membuat akun admin stan.
+            </p>
 
-            {/* Telepon */}
-            <div>
-              <label className="block text-sm mb-1">No. Telepon</label>
-              <input
-                type="tel"
-                className="border p-2 w-full rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                value={telp}
-                onChange={(e) => setTelp(e.target.value)}
-                placeholder="08xxxxxxxxxx"
-              />
-            </div>
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  Nama Stan
+                </label>
+                <input
+                  type="text"
+                  value={namaStan}
+                  onChange={(e) => setNamaStan(e.target.value)}
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-xs
+                             focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
+                />
+              </div>
 
-            {/* Username */}
-            <div>
-              <label className="block text-sm mb-1">Username</label>
-              <input
-                type="text"
-                className="border p-2 w-full rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
-                required
-              />
-            </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  Nama Pemilik
+                </label>
+                <input
+                  type="text"
+                  value={namaPemilik}
+                  onChange={(e) => setNamaPemilik(e.target.value)}
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-xs
+                             focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
+                />
+              </div>
 
-            
-            <div>
-              <label className="block text-sm mb-1">Password</label>
-              <input
-                type="password"
-                className="border p-2 w-full rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-              />
-            </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  No. Telepon
+                </label>
+                <input
+                  type="tel"
+                  value={telp}
+                  onChange={(e) => setTelp(e.target.value)}
+                  required // ✅ WAJIB
+                  placeholder="08xxxxxxxxxx"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-xs
+               focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-xs
+                             focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-xs
+                             focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
+                />
+              </div>
+
+              {/* FOTO – DRAG & DROP */}
+              <div>
+                <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  Foto Stan (opsional)
+                </label>
+
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    pickFile(e.dataTransfer.files?.[0]);
+                  }}
+                  className={`flex items-center justify-between rounded-md border-2 border-dashed px-3 py-2 text-[11px] transition
+                    ${
+                      isDragging
+                        ? "border-red-500 bg-red-50"
+                        : "border-slate-300 hover:border-red-400"
+                    }`}
+                >
+                  <span className="text-slate-500 truncate">
+                    {foto
+                      ? foto.name
+                      : "Drag & drop foto di sini atau klik Browse"}
+                  </span>
+
+                  {foto ? (
+                    <button
+                      type="button"
+                      onClick={() => setFoto(null)}
+                      className="ml-2 text-slate-400 hover:text-red-600 transition"
+                      title="Hapus foto"
+                    >
+                    </button>
+                  ) : (
+                    <label className="cursor-pointer rounded bg-slate-100 px-2 py-1 text-slate-700 hover:bg-slate-200 transition">
+                      Browse
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => pickFile(e.target.files?.[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white
+                           hover:bg-red-700 transition disabled:opacity-60"
+              >
+                {loading ? "Processing..." : "Register Stan"}
+              </button>
+            </form>
 
             <button
-              type="submit"
-              disabled={loading}
-              className="mt-4 bg-primary hover:bg-primary/90 uppercase w-full p-2 rounded-md text-white disabled:opacity-60"
+              type="button"
+              onClick={() => router.replace("/login")}
+              className="mt-3 w-full rounded-md border border-slate-300 px-4 py-2 text-xs font-medium text-slate-700
+                         hover:bg-slate-100 hover:border-slate-400 transition"
             >
-              {loading ? "Processing..." : "Register Stan"}
+              ← Back to Login
             </button>
-          </form>
-        </div>
+          </div>
+        </section>
+
+        {/* RIGHT */}
+        <section className="hidden lg:flex h-full w-full items-center justify-center">
+          <Image
+            src="/image/icon.png"
+            alt="Register Illustration"
+            width={800}
+            height={800}
+            className="-translate-x-12 translate-y-4 object-contain"
+            priority
+          />
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 

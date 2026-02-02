@@ -9,46 +9,56 @@ const prisma = new PrismaClient();
  * POST /auth/register/siswa
  * multipart/form-data (kalau upload foto) atau JSON (kalau tanpa foto)
  */
-export const registerSiswa = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const registerSiswaPublic = async (req: Request, res: Response) => {
   try {
-    const { nama_siswa, alamat, telp, username, password } = req.body as {
-      nama_siswa?: string;
-      alamat?: string;
-      telp?: string;
-      username?: string;
-      password?: string;
-    };
+    const { nama_siswa, alamat, telp, username, password } = req.body;
 
+    // basic validation
     if (!nama_siswa || !username || !password) {
-      res
-        .status(400)
-        .json({ msg: "Field nama_siswa, username, dan password wajib diisi" });
-      return;
+      return res.status(400).json({
+        success: false,
+        message: "Nama siswa, username, dan password wajib diisi",
+      });
     }
 
-    // cek username unik
-    const exist = await prisma.users.findUnique({ where: { username } });
-    if (exist) {
-      res.status(409).json({ msg: "Username sudah digunakan" });
-      return;
+    // ✅ validasi telp (opsional, 8–15 digit)
+    if (telp) {
+      const phoneRegex = /^[0-9]{8,15}$/;
+      if (!phoneRegex.test(telp)) {
+        return res.status(400).json({
+          success: false,
+          message: "Nomor telepon harus 8–15 digit angka",
+        });
+      }
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    // cek username
+    const existing = await prisma.users.findUnique({
+      where: { username },
+    });
 
-    // ambil foto upload (kalau ada)
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "Username sudah digunakan",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     const foto = req.file?.filename ?? null;
 
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.users.create({
         data: {
           username,
-          password: hashed,
+          password: hashedPassword,
           role: "siswa",
         },
-        select: { id: true, username: true, role: true },
+        select: {
+          id: true,
+          username: true,
+          role: true,
+        },
       });
 
       const siswa = await tx.siswa.create({
@@ -64,16 +74,28 @@ export const registerSiswa = async (
       return { user, siswa };
     });
 
-    res.status(201).json({
-      msg: "Register siswa berhasil",
-      user: result.user,
-      siswa: result.siswa,
+    return res.status(201).json({
+      success: true,
+      message: "Registrasi siswa berhasil",
+      data: result,
     });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ msg: error.message || "Server error" });
+  } catch (err: any) {
+    console.error("REGISTER SISWA ERROR:", err);
+
+    if (err.code === "P2002") {
+      return res.status(409).json({
+        success: false,
+        message: "Username sudah digunakan",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
   }
 };
+
 
 /**
  * REGISTER ADMIN STAN
