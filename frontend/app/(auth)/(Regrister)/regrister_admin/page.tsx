@@ -197,8 +197,7 @@ const RegisterStanPage = () => {
                       onClick={() => setFoto(null)}
                       className="ml-2 text-slate-400 hover:text-red-600 transition"
                       title="Hapus foto"
-                    >
-                    </button>
+                    ></button>
                   ) : (
                     <label className="cursor-pointer rounded bg-slate-100 px-2 py-1 text-slate-700 hover:bg-slate-200 transition">
                       Browse
@@ -235,15 +234,27 @@ const RegisterStanPage = () => {
         </section>
 
         {/* RIGHT */}
-        <section className="hidden lg:flex h-full w-full items-center justify-center">
+        <section className="relative hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
+          {/* Background Image */}
           <Image
-            src="/image/icon.png"
-            alt="Register Illustration"
-            width={800}
-            height={800}
-            className="-translate-x-12 translate-y-4 object-contain"
+            src="/image/bgg.jpg" // ⬅️ samakan dengan login
+            alt="Background"
+            fill
+            className="object-cover"
             priority
           />
+
+          {/* Foreground Illustration */}
+          <div className="relative z-10">
+            <Image
+              src="/image/icon.png"
+              alt="Register Illustration"
+              width={800}
+              height={800}
+              className="-translate-x-12 translate-y-4 object-contain"
+              priority
+            />
+          </div>
         </section>
       </div>
     </main>

@@ -37,7 +37,7 @@ const RegisterSiswaPage = () => {
       const { data } = await axios.post(
         `${BASE_API_URL}/register_siswa`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       toast.success(data.msg || "Register siswa berhasil");
@@ -49,7 +49,7 @@ const RegisterSiswaPage = () => {
       toast.error(
         error.response?.data?.msg ||
           error.response?.data?.error ||
-          "Register siswa gagal"
+          "Register siswa gagal",
       );
     } finally {
       setLoading(false);
@@ -202,8 +202,10 @@ const RegisterSiswaPage = () => {
                       ✕
                     </button>
                   ) : (
-                    <label className="cursor-pointer rounded bg-slate-100 px-2 py-1 text-slate-700
-                                       hover:bg-slate-200 transition">
+                    <label
+                      className="cursor-pointer rounded bg-slate-100 px-2 py-1 text-slate-700
+                                       hover:bg-slate-200 transition"
+                    >
                       Browse
                       <input
                         type="file"
@@ -240,15 +242,27 @@ const RegisterSiswaPage = () => {
         </section>
 
         {/* RIGHT */}
-        <section className="hidden lg:flex h-full w-full items-center justify-center">
+        <section className="relative hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
+          {/* Background Image */}
           <Image
-            src="/image/icon.png"
-            alt="Register Illustration"
-            width={800}
-            height={800}
-            className="-translate-x-12 translate-y-4 object-contain"
+            src="/image/bgg.jpg" // ⬅️ samakan dengan login
+            alt="Background"
+            fill
+            className="object-cover"
             priority
           />
+
+          {/* Foreground Illustration */}
+          <div className="relative z-10">
+            <Image
+              src="/image/icon.png"
+              alt="Register Illustration"
+              width={800}
+              height={800}
+              className="-translate-x-12 translate-y-4 object-contain"
+              priority
+            />
+          </div>
         </section>
       </div>
     </main>

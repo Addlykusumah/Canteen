@@ -230,16 +230,32 @@ const LoginPage = () => {
         </section>
 
         {/* RIGHT */}
-        <section className="hidden lg:flex h-full w-full items-center justify-center">
-          <Image
-            src="/image/icon.png"
-            alt="Login Illustration"
-            width={800}
-            height={800}
-            className="-translate-x-12 translate-y-4 object-contain"
-            priority
-          />
-        </section>
+      <section className="relative hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
+  {/* Background Image */}
+  <Image
+    src="/image/bgg.jpg" // ⬅️ gambar background
+    alt="Background"
+    fill
+    className="object-cover"
+    priority
+  />
+
+  {/* Overlay biar soft */}
+
+
+  {/* Foreground Illustration */}
+  <div className="relative z-10">
+    <Image
+      src="/image/icon.png"
+      alt="Login Illustration"
+      width={800}
+      height={800}
+      className="-translate-x-12 translate-y-4 object-contain"
+      priority
+    />
+  </div>
+</section>
+
       </div>
     </main>
   );
