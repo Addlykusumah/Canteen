@@ -8,7 +8,9 @@ import {
   updateMenu,
   deleteMenu,
   getDetailMenu,
-  searchMenu
+  searchMenu,       
+  getAllMenuSiswa,
+  getMenuByStanSiswa
 } from "../controllers/menuController";
 
 const router = express.Router();
@@ -30,5 +32,10 @@ router.delete("/menu/hapus/:id", authMiddleware, onlyAdminStan, deleteMenu);
 
 // SEARCH menu
 router.get("/menu/search/:keyword", authMiddleware, onlyAdminStan, searchMenu);
+
+router.get("/menu", getAllMenuSiswa);
+
+router.get("/menu/stan/:id_stan", getMenuByStanSiswa);
+
 
 export default router;

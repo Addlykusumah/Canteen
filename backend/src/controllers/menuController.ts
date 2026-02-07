@@ -20,6 +20,7 @@ export const getAllMenu = async (req: Request, res: Response) => {
   }
 };
 
+
 export const getDetailMenu = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -32,6 +33,84 @@ export const getDetailMenu = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getAllMenuSiswa = async (req: Request, res: Response) => {
+  try {
+    const menus = await prisma.menu.findMany({
+      include: {
+        stan: {
+          select: {
+            id: true,
+            nama_stan: true,
+            foto: true,
+          },
+        },
+      },
+      orderBy: {
+        nama_makanan: "asc",
+      },
+    });
+
+    return res.json({
+      success: true,
+      data: menus,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+export const getMenuByStanSiswa = async (req: Request, res: Response) => {
+  try {
+    const id_stan = Number(req.params.id_stan);
+
+    if (isNaN(id_stan)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID stan tidak valid",
+      });
+    }
+
+    const stan = await prisma.stan.findUnique({
+      where: { id: id_stan },
+      select: {
+        id: true,
+        nama_stan: true,
+        foto: true,
+      },
+    });
+
+    if (!stan) {
+      return res.status(404).json({
+        success: false,
+        message: "Stan tidak ditemukan",
+      });
+    }
+
+    const menus = await prisma.menu.findMany({
+      where: { id_stan },
+      orderBy: {
+        nama_makanan: "asc",
+      },
+    });
+
+    return res.json({
+      success: true,
+      stan,
+      menu: menus,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 
 export const createMenu = async (req: Request, res: Response) => {
   try {

@@ -32,13 +32,14 @@ app.use("/user", login);
 
 app.use("/api", SiswaAdmin);
 
-app.use("/admin", menuRoute);
+app.use("/", menuRoute);
 
 app.use("/admin", diskonRoute);
 
 app.use("/", transaksiRoute);
 
 app.use ("/", detailtransaksiRoute)
+
 
 
 
