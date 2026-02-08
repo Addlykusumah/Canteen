@@ -35,6 +35,7 @@ export interface Stan {
   nama_stan: string;
   nama_pemilik: string;
   telp?: string | null;
+  foto?: string | null;
   id_user?: number; // optional (kadang tidak dikirim oleh API)
 }
 
@@ -46,6 +47,58 @@ export interface Menu {
   foto?: string | null;
   deskripsi?: string | null;
   id_stan?: number; // optional
+}
+
+export interface MenuByStanResponse {
+  success: boolean;
+  stan: Pick<Stan, "id" | "nama_stan" | "foto">;
+  menu: Menu[];
+}
+
+// =======================
+// MENU LIST (/menu)
+// =======================
+
+export type MenuRow = {
+  id: number
+  nama_makanan: string
+  harga: number
+  jenis: "makanan" | "minuman"
+  foto: string | null
+  deskripsi: string | null
+  id_stan: number
+  stan?: {
+    id: number
+    nama_stan: string
+    foto: string | null
+  }
+}
+
+
+
+
+
+
+
+export interface StanMini {
+  id: number;
+  nama_stan: string;
+  foto: string | null;
+}
+export interface MenuWithStan {
+  id: number
+  nama_makanan: string
+  harga: number
+  jenis: 'makanan' | 'minuman'
+  foto: string | null
+  deskripsi: string | null
+  id_stan: number
+  stan: StanMini
+}
+
+export interface MenuListResponse {
+  success: boolean
+  data: MenuWithStan[]
 }
 
 export interface Diskon {

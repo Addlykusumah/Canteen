@@ -5,20 +5,24 @@ import fs from "fs";
 
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file, cb) => {
-    // tentukan folder berdasarkan route
     let folder = "public/uploads";
 
-    if (req.baseUrl.includes("/siswa")) {
+    const url = req.originalUrl || ""; // contoh: /register_stan
+
+    // REGISTER SISWA
+    if (url.startsWith("/register_siswa") || url.includes("/siswa")) {
       folder = "public/siswa_picture";
-    } else if (req.baseUrl.includes("/admin/stan")) {
+    }
+    // REGISTER STAN + PROFILE STAN (kalau nanti ada route stan lain)
+    else if (url.startsWith("/register_stan") || url.includes("/stan")) {
       folder = "public/stan_picture";
-    } else if (req.baseUrl.includes("/menu")) {
+    }
+    // MENU
+    else if (url.includes("/menu")) {
       folder = "public/menu_picture";
     }
 
-    // pastikan folder ada
     fs.mkdirSync(folder, { recursive: true });
-
     cb(null, folder);
   },
 
