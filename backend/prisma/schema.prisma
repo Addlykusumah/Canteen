@@ -12,9 +12,7 @@ datasource db {
   provider = "mysql"
 }
 
-//
-// ENUMS
-//
+
 enum StatusTransaksi {
   belum_dikonfirm
   dimasak

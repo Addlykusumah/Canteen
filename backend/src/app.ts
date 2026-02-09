@@ -30,7 +30,7 @@ app.use("/", siswa);
 
 app.use("/user", login);
 
-app.use("/api", SiswaAdmin);
+app.use("/", SiswaAdmin);
 
 app.use("/", menuRoute);
 

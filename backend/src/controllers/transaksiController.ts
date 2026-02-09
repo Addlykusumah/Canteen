@@ -19,7 +19,7 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
       return res.status(400).json({ msg: "Items transaksi wajib diisi" });
     }
 
-    // merge item duplikat + validasi
+    
     const merged = new Map<number, number>();
     for (const it of body.items) {
       const id_menu = Number(it.id_menu);
@@ -118,6 +118,138 @@ export const createTransaksiSiswa = async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message || "Server error" });
   }
 };
+
+export const getAllTransaksiSiswa = async (req: Request, res: Response) => {
+  try {
+    const id_user = (req as any).user?.id;
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+
+    const siswa = await prisma.siswa.findFirst({
+      where: { id_user },
+    });
+
+    if (!siswa)
+      return res.status(403).json({ msg: "Data siswa tidak ditemukan" });
+
+    const transaksiList = await prisma.transaksi.findMany({
+      where: { id_siswa: siswa.id },
+      orderBy: { tanggal: "desc" },
+      include: {
+        stan: {
+          select: {
+            id: true,
+            nama_stan: true,
+            foto: true,
+          },
+        },
+        detail_transaksi: {
+          include: {
+            menu: {
+              select: {
+                id: true,
+                nama_makanan: true,
+                jenis: true,
+                foto: true,
+                deskripsi: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // hitung total tiap transaksi
+    const data = transaksiList.map((t) => {
+      const total = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty * d.harga_beli,
+        0
+      );
+
+      const itemsCount = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty,
+        0
+      );
+
+      return {
+        ...t,
+        total,
+        itemsCount,
+      };
+    });
+
+    return res.json({
+      jumlahTransaksi: data.length,
+      transaksi: data,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({
+      error: err.message || "Server error",
+    });
+  }
+};
+
+export const getAllTransaksiAdmin = async (req: Request, res: Response) => {
+  try {
+    const id_user = (req as any).user?.id;
+    const role = (req as any).user?.role;
+
+    if (!id_user) return res.status(401).json({ msg: "Unauthorized" });
+    if (role !== "admin_stan") {
+      return res.status(403).json({ msg: "Akses ditolak, hanya admin stan" });
+    }
+
+    // Cari stan milik admin
+    const stan = await prisma.stan.findFirst({ where: { id_user } });
+    if (!stan) return res.status(404).json({ msg: "Stan tidak ditemukan" });
+
+    // Optional filter status (?status=belum_dikonfirm)
+    const statusQ = req.query.status as string | undefined;
+    const statusFilter = statusQ ? (statusQ as StatusTransaksi) : undefined;
+
+    const transaksiList = await prisma.transaksi.findMany({
+      where: {
+        id_stan: stan.id,
+        ...(statusFilter ? { status: statusFilter } : {}),
+      },
+      orderBy: { tanggal: "desc" },
+      include: {
+        siswa: { select: { id: true, nama_siswa: true, telp: true, foto: true } },
+        detail_transaksi: {
+          include: {
+            menu: {
+              select: { id: true, nama_makanan: true, jenis: true, foto: true },
+            },
+          },
+        },
+      },
+    });
+
+    const data = transaksiList.map((t) => {
+      const total = t.detail_transaksi.reduce(
+        (sum, d) => sum + d.qty * d.harga_beli,
+        0
+      );
+      const itemsCount = t.detail_transaksi.reduce((sum, d) => sum + d.qty, 0);
+
+      return { ...t, total, itemsCount };
+    });
+
+    const totalSemua = data.reduce((sum, t) => sum + t.total, 0);
+
+    return res.json({
+      stan: { id: stan.id, nama_stan: stan.nama_stan },
+      filter: { status: statusFilter ?? "all" },
+      jumlahTransaksi: data.length,
+      totalSemua,
+      transaksi: data,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
+};
+
 
 export const HistoriPesananBulananSiswa = async (
   req: Request,

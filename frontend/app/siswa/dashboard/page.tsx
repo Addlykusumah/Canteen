@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { StanMini, MenuListResponse } from "../../types";
+import Navbar from "@/components/navbar";
 
 import {
   Menu,
@@ -43,9 +44,7 @@ const getStanImage = (filename?: string | null) => {
   return `${BASE_IMAGE_STAN}/${filename}`;
 };
 
-// ==============================
-// MENU types (sesuai response backend)
-// ==============================
+
 type MenuRow = {
   id: number;
   nama_makanan: string;
@@ -79,7 +78,6 @@ const formatRupiah = (n: number) =>
   }).format(n);
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
   // ✅ cart
@@ -93,9 +91,7 @@ export default function Home() {
   const [menus, setMenus] = useState<MenuRow[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
 
-  // ===================================
-  // FETCH STAN (dedup dari /menu)
-  // ===================================
+
   useEffect(() => {
     const fetchStansFromMenu = async () => {
       setLoadingStan(true);
@@ -174,60 +170,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/image/kanan.png"
-                alt="Logo"
-                width={300}
-                height={300}
-                className="h-36 w-36"
-              />
-            </div>
-
-            <nav className="hidden md:flex gap-8">
-              {["Home", "About", "Services", "Testimonials"].map((item) => (
-                <a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  className="text-sm hover:text-red-600 transition"
-                >
-                  {item}
-                </a>
-              ))}
-            </nav>
-
-            <button className="hidden md:block bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition text-sm font-medium">
-              Order Now
-            </button>
-
-            <button
-              className="md:hidden"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {menuOpen && (
-            <div className="md:hidden pb-4 border-t border-gray-200">
-              <nav className="flex flex-col gap-3">
-                {["Home", "About", "Services", "Testimonials"].map((item) => (
-                  <a
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
-                    className="text-sm hover:text-red-600 py-2"
-                  >
-                    {item}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
+     <Navbar />
 
       {/* Hero */}
       <section id="home" className="py-12 md:py-20">

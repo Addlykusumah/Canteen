@@ -110,8 +110,6 @@ export const getMenuByStanSiswa = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const createMenu = async (req: Request, res: Response) => {
   try {
     const { nama_makanan, jenis, harga, deskripsi } = req.body;

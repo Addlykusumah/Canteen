@@ -4,6 +4,8 @@ import PDFDocument from "pdfkit";
 
 const prisma = new PrismaClient();
 
+
+
 export const getNotaTransaksi = async (req: Request, res: Response) => {
   try {
     const id_transaksi = Number(req.params.id);
@@ -47,78 +49,83 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
 
     const total = detail.reduce((sum, d) => sum + d.subtotal, 0);
 
-    // ========================
-    // ==== PDF MODE STRUK ====
-    // ========================
-    if (isPdf) {
-      const doc = new PDFDocument({
-        size: [226, 600], // ukuran struk 80mm
-        margins: { top: 10, bottom: 10, left: 10, right: 10 },
-      });
+   if (isPdf) {
+  const doc = new PDFDocument({
+    size: [226, 600],
+    margins: { top: 10, bottom: 10, left: 10, right: 10 },
+  });
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        `inline; filename=struk-${trx.id}.pdf`,
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename=struk-${trx.id}.pdf`
+  );
+
+  doc.pipe(res);
+
+  // HEADER (nama stan)
+  doc
+    .fontSize(12)
+    .text(trx.stan.nama_stan.toUpperCase(), { align: "center" });
+
+  doc.moveDown(0.3);
+
+  // ✅ Ubah tulisan kantin
+  doc.fontSize(8).text("Kantin SMK Telkom Malang", { align: "center" });
+
+  doc.moveDown(0.5);
+
+  // GARIS
+  doc.text("--------------------------------", { align: "center" });
+
+  // INFO TRANSAKSI
+  doc
+    .fontSize(8)
+    .text(
+      `Tanggal : ${trx.tanggal.toLocaleDateString()} ${trx.tanggal.toLocaleTimeString()}`
+    );
+
+  doc.text(`Siswa   : ${trx.siswa.nama_siswa}`);
+  doc.text(`Status  : ${trx.status}`);
+
+  doc.moveDown(0.5);
+
+  doc.text("--------------------------------", { align: "center" });
+
+  // DETAIL ITEMS
+  detail.forEach((item) => {
+    doc.fontSize(9).text(item.nama);
+
+    doc
+      .fontSize(8)
+      .text(
+        `${item.qty} x Rp${item.harga.toLocaleString()}   Rp${item.subtotal.toLocaleString()}`
       );
 
-      // HEADER (nama stan)
-      doc
-        .fontSize(12)
-        .text(trx.stan.nama_stan.toUpperCase(), { align: "center" });
-      doc.moveDown(0.3);
+    doc.moveDown(0.2);
+  });
 
-      doc.fontSize(8).text("Kantin Sekolah", { align: "center" });
-      doc.text("Jl. ....", { align: "center" });
-      doc.moveDown(0.5);
+  doc.text("--------------------------------", { align: "center" });
 
-      // GARIS PEMBATAS
-      doc.text("--------------------------------", { align: "center" });
+  // ✅ Hanya total saja
+  doc.fontSize(9).text(`Total : Rp${total.toLocaleString()}`);
 
-      // INFO TRANSAKSI
-      doc
-        .fontSize(8)
-        .text(
-          `Tanggal : ${trx.tanggal.toLocaleDateString()} ${trx.tanggal.toLocaleTimeString()}`,
-        );
-      doc.text(`Siswa   : ${trx.siswa.nama_siswa}`);
-      doc.text(`Status  : ${trx.status}`);
-      doc.moveDown(0.5);
+  doc.moveDown(0.5);
 
-      doc.text("--------------------------------", { align: "center" });
+  doc.text("--------------------------------", { align: "center" });
 
-      // DETAIL ITEMS
-      detail.forEach((item) => {
-        doc.fontSize(9).text(item.nama);
-        doc
-          .fontSize(8)
-          .text(
-            `${item.qty} x Rp${item.harga.toLocaleString()}   Rp${item.subtotal.toLocaleString()}`,
-          );
-        doc.moveDown(0.2);
-      });
+  doc.moveDown(0.3);
 
-      doc.text("--------------------------------", { align: "center" });
+  doc.fontSize(7).text("Terima Kasih telah membeli!", {
+    align: "center",
+  });
 
-      // TOTAL
-      doc.fontSize(9).text(`Total   : Rp${total.toLocaleString()}`);
-      doc.text(`Bayar   : Rp${total.toLocaleString()}`);
-      doc.text(`Kembali : Rp0`);
+  doc.end();
+  return;
+}
 
-      doc.moveDown(0.5);
-      doc.text("--------------------------------", { align: "center" });
-      doc.moveDown(0.3);
 
-      doc.fontSize(7).text("Terima Kasih telah membeli!", { align: "center" });
-      doc.fontSize(7).text("Saran: http://kantin.com", { align: "center" });
-
-      doc.end();
-      return doc.pipe(res);
-    }
-
-    // ========================
-    // ==== MODE JSON ====
-    // ========================
+ 
     return res.status(200).json({
       status: true,
       msg: "Nota transaksi berhasil ditampilkan",
@@ -141,3 +148,5 @@ export const getNotaTransaksi = async (req: Request, res: Response) => {
     });
   }
 };
+
+
