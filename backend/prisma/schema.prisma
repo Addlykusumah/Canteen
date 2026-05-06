@@ -9,9 +9,10 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
-
 
 enum StatusTransaksi {
   belum_dikonfirm
@@ -30,9 +31,7 @@ enum UserRole {
   siswa
 }
 
-//
-// USERS
-//
+
 model users {
   id       Int      @id @default(autoincrement())
   username String   @unique
@@ -108,9 +107,8 @@ model diskon {
   menu_diskon menu_diskon[]
 }
 
-//
-// MENU_DISKON (Pivot Table Many-to-Many)
-//
+
+
 model menu_diskon {
   id        Int @id @default(autoincrement())
   id_menu   Int

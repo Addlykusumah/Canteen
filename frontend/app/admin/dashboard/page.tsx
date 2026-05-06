@@ -38,9 +38,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ==============================
-  // FETCH PROFILE STAN (AXIOS)
-  // ==============================
+
+
   const fetchProfileStan = async () => {
     try {
       setLoading(true);
@@ -53,15 +52,15 @@ export default function AdminDashboardPage() {
       });
 
       if (res.status === 200) {
-       
+
         setProfile(res.data?.stan ?? null);
       }
     } catch (err: any) {
       console.error(err);
       setError(
         err?.response?.data?.msg ??
-          err?.response?.data?.message ??
-          "Gagal mengambil profile stan"
+        err?.response?.data?.message ??
+        "Gagal mengambil profile stan"
       );
     } finally {
       setLoading(false);
@@ -82,9 +81,9 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
 
-        <Navbar />
+      <Navbar />
       {/* HERO */}
-      <div className="overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-red-600 to-rose-600 shadow-2xl">
+      <div className="overflow-hidden rounded-[2.5rem]  from-red-600 to-rose-600 shadow-2xl">
         <div className="p-8 text-white">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-xs font-extrabold">
             🍔 KantinKu
@@ -111,7 +110,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* CARD PROFILE */}
-      <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+      <div className=" bg-white p-6 shadow-sm">
         {loading ? (
           <p className="text-sm text-slate-500">
             Mengambil data profile stan...

@@ -21,16 +21,7 @@ export const registerSiswaPublic = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ validasi telp (opsional, 8–15 digit)
-    if (telp) {
-      const phoneRegex = /^[0-9]{8,15}$/;
-      if (!phoneRegex.test(telp)) {
-        return res.status(400).json({
-          success: false,
-          message: "Nomor telepon harus 8–15 digit angka",
-        });
-      }
-    }
+ 
 
     // cek username
     const existing = await prisma.users.findUnique({

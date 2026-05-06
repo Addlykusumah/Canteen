@@ -9,8 +9,7 @@ import type { StanMini, MenuListResponse } from "../../types";
 import Navbar from "@/components/navbar";
 
 import {
-  Menu,
-  X,
+  
   ArrowRight,
   Utensils,
   Clock,
@@ -87,7 +86,7 @@ export default function Home() {
   const [stans, setStans] = useState<StanMini[]>([]);
   const [loadingStan, setLoadingStan] = useState(false);
 
-  // ✅ menu list untuk section "Menu"
+
   const [menus, setMenus] = useState<MenuRow[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
 
@@ -138,9 +137,7 @@ export default function Home() {
     }));
   }, [stans]);
 
-  // ===================================
-  // FETCH MENU (FOKUS MENU SAJA)
-  // ===================================
+ 
   useEffect(() => {
     const fetchMenus = async () => {
       setLoadingMenu(true);
