@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+dist
+.git
+.env
+
+public/uploads
+public/menu_picture
+public/siswa_picture
