@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { upload } from "../middleware/upload";
-import { registerStan, registerSiswaPublic } from "../controllers/regristerController";
+import { registerStan, registerSiswaPublic } from "../controllers/registerController";
 import { verifyRegisterStan, verifyRegisterSiswa } from "../middleware/userValidation";
 
 

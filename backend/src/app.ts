@@ -5,7 +5,7 @@ dotenv.config();
 
 
 import login from "./routers/authRoute";
-import regrister from "./routers/regristerRoute";
+import regrister from "./routers/registerRoute";
 import SiswaAdmin from "./routers/siswaadminRoute";
 import menuRoute from "./routers/menuRoute";
 import diskonRoute from "./routers/diskonRoute";
