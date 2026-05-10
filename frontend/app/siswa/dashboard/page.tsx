@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 import { BASE_API_URL, BASE_IMAGE_STAN, BASE_IMAGE_MENU } from "@/global";
-import { useCart } from "@/components/siswa/cart-provider"; // ✅ ADD
+import { useCart } from "@/components/siswa/cart-provider"; 
 
 const STAN_ICONS = [
   Utensils,
