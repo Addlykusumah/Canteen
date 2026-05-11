@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
@@ -8,8 +9,13 @@ const nextConfig = {
         port: "8000",
         pathname: "/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "canteen-ekama.up.railway.app",
+        pathname: "/public/**",
+      },
     ],
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

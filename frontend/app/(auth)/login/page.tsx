@@ -55,8 +55,8 @@ const LoginPage = () => {
     } catch (error: any) {
       toast.error(
         error.response?.data?.msg ||
-          error.response?.data?.error ||
-          "Something went wrong",
+        error.response?.data?.error ||
+        "Something went wrong",
       );
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ const LoginPage = () => {
   return (
     <main
       className="relative h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
-    
+
     >
       {/* Overlay supaya konten kebaca */}
       <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px]" />
@@ -78,11 +78,10 @@ const LoginPage = () => {
             <div className="relative">
               {/* LOGIN VIEW */}
               <div
-                className={`transition-[opacity,transform] duration-500 ease-in-out ${
-                  mode === "login"
-                    ? "opacity-100 translate-y-0 pointer-events-auto relative"
-                    : "opacity-0 -translate-y-4 pointer-events-none absolute inset-0"
-                }`}
+                className={`transition-[opacity,transform] duration-500 ease-in-out ${mode === "login"
+                  ? "opacity-100 translate-y-0 pointer-events-auto relative"
+                  : "opacity-0 -translate-y-4 pointer-events-none absolute inset-0"
+                  }`}
               >
                 {/* Logo */}
                 <div className="h-16 flex items-center mb-4">
@@ -92,6 +91,7 @@ const LoginPage = () => {
                     width={200}
                     height={120}
                     className="translate-x-28 translate-y-4 object-contain"
+                    style={{ height: "auto" }}
                     priority
                   />
                 </div>
@@ -152,11 +152,10 @@ const LoginPage = () => {
 
               {/* REGISTER VIEW */}
               <div
-                className={`transition-[opacity,transform] duration-500 ease-in-out ${
-                  mode === "register"
-                    ? "opacity-100 translate-y-0 pointer-events-auto relative"
-                    : "opacity-0 translate-y-4 pointer-events-none absolute inset-0"
-                }`}
+                className={`transition-[opacity,transform] duration-500 ease-in-out ${mode === "register"
+                  ? "opacity-100 translate-y-0 pointer-events-auto relative"
+                  : "opacity-0 translate-y-4 pointer-events-none absolute inset-0"
+                  }`}
               >
                 <h2 className="text-2xl font-bold text-slate-900">
                   Choose Register Type
@@ -230,31 +229,32 @@ const LoginPage = () => {
         </section>
 
         {/* RIGHT */}
-      <section className="relative hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
-  {/* Background Image */}
-  <Image
-    src="/image/bgg.jpg" // ⬅️ gambar background
-    alt="Background"
-    fill
-    className="object-cover"
-    priority
-  />
+        <section className="relative hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
+          {/* Background Image */}
+          <Image
+            src="/image/bgg.jpg"
+            alt="Background"
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+          />
 
-  {/* Overlay biar soft */}
+          {/* Overlay biar soft */}
 
 
-  {/* Foreground Illustration */}
-  <div className="relative z-10">
-    <Image
-      src="/image/icon.png"
-      alt="Login Illustration"
-      width={800}
-      height={800}
-      className="-translate-x-12 translate-y-4 object-contain"
-      priority
-    />
-  </div>
-</section>
+          {/* Foreground Illustration */}
+          <div className="relative z-10">
+            <Image
+              src="/image/icon.png"
+              alt="Login Illustration"
+              width={800}
+              height={800}
+              className="-translate-x-12 translate-y-4 object-contain"
+              priority
+            />
+          </div>
+        </section>
 
       </div>
     </main>
